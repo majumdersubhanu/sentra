@@ -31,8 +31,9 @@ class WorkOrderDetailScreen extends ConsumerWidget {
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, _) => Scaffold(body: Center(child: Text('Error: $err'))),
       data: (wo) {
-        if (wo == null)
+        if (wo == null) {
           return const Scaffold(body: Center(child: Text('Not found')));
+        }
 
         return Scaffold(
           appBar: _DetailAppBar(workOrderId: workOrderId, wo: wo),
@@ -307,7 +308,7 @@ class _AttachmentsSection extends ConsumerWidget {
                 data: (attachments) =>
                     AttachmentGallery(attachments: attachments),
                 loading: () => const LinearProgressIndicator(),
-                error: (_, __) => const Text('Failed to load attachments'),
+                error: (err, stack) => const Text('Failed to load attachments'),
               ),
         ],
       ),
@@ -317,7 +318,7 @@ class _AttachmentsSection extends ConsumerWidget {
   void _pickAttachment(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (_) => Padding(
+      builder: (ctx) => Padding(
         padding: const EdgeInsets.all(SentraSpacing.m),
         child: AttachmentPicker(entityId: wo.id, entityType: 'work_order'),
       ),
@@ -384,7 +385,7 @@ class _DetailBottomActions extends ConsumerWidget {
   ) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
+      builder: (ctx) => Container(
         padding: const EdgeInsets.all(SentraSpacing.m),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -398,7 +399,7 @@ class _DetailBottomActions extends ConsumerWidget {
                 ref.read(workOrdersViewModelProvider.notifier).mutate(() async {
                   return const Right(unit);
                 });
-                Navigator.pop(context);
+                Navigator.pop(ctx);
               },
             ),
           ],

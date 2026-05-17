@@ -1,19 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:sentra/features/work_orders/domain/work_order.dart';
-import 'package:sentra/features/work_orders/domain/work_order_repository.dart';
-import 'package:sentra/core/error/failures.dart';
-
-class MockWorkOrderRepository extends Mock implements WorkOrderRepository {}
 
 void main() {
-  late MockWorkOrderRepository mockRepository;
-
-  setUp(() {
-    mockRepository = MockWorkOrderRepository();
-  });
-
   group('WorkOrder Domain Tests', () {
     test('WorkOrder model copyWith works correctly', () {
       final wo = WorkOrder(
