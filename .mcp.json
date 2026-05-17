@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["@supabase/mcp-server@latest"],
+      "env": {
+        "SUPABASE_URL": "https://denvpxoglpdekerpfkbu.supabase.co",
+        "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlbnZweG9nbHBkZWtlcnBma2J1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODc3MzQ4MSwiZXhwIjoyMDk0MzQ5NDgxfQ.tPh9L1iQJYGsOKJhEz-T4rVFP0N8GwIc_O1Aw_1AxEQ"
+      }
+    }
+  }
+}
