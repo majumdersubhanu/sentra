@@ -21,7 +21,7 @@ class SentraApp extends ConsumerWidget {
       builder: (context, child) {
         return MaterialApp.router(
           title: 'Sentra Field Platform',
-          debugShowCheckedModeBanner: false,
+          debugShowCheckedModeBanner: true,
           themeMode: themeConfig.mode == SentraThemeMode.light
               ? ThemeMode.light
               : ThemeMode.dark,

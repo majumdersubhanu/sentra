@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import '../di/logger.dart';
 
 /// Service that monitors network connectivity and exposes a reactive stream.
 class ConnectivityService {
@@ -21,7 +22,7 @@ class ConnectivityService {
     final results = await _connectivity.checkConnectivity();
     _isOnline = _hasConnection(results);
     if (kDebugMode) {
-      debugPrint(
+      logger.d(
         '[Connectivity] Initial state: ${_isOnline ? "ONLINE" : "OFFLINE"}',
       );
     }
@@ -32,7 +33,7 @@ class ConnectivityService {
         _isOnline = newState;
         _controller.add(_isOnline);
         if (kDebugMode) {
-          debugPrint(
+          logger.d(
             '[Connectivity] Changed to: ${_isOnline ? "ONLINE" : "OFFLINE"}',
           );
         }

@@ -153,7 +153,8 @@ class _AssetCreateScreenState extends ConsumerState<AssetCreateScreen> {
             SizedBox(
               width: double.infinity,
               child: SentraButton(
-                label: _isLoading ? 'Creating...' : 'Register Asset',
+                label: 'Register Asset',
+                isLoading: _isLoading,
                 onPressed: _isLoading ? null : _createAsset,
               ),
             ),

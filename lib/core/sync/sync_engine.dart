@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../network/connectivity_service.dart';
 import '../storage/database.dart';
 import '../../features/auth/domain/auth_repository.dart';
+import '../di/logger.dart';
 import 'package:drift/drift.dart' hide Column;
 
 /// Drains the local sync queue when connectivity is available.
@@ -69,9 +70,7 @@ class SyncEngine {
       }
 
       if (kDebugMode) {
-        debugPrint(
-          '[SyncEngine] Draining ${mutations.length} pending mutations',
-        );
+        logger.d('[SyncEngine] Draining ${mutations.length} pending mutations');
       }
 
       SupabaseClient? client;
@@ -96,7 +95,7 @@ class SyncEngine {
           _consecutiveFailures = 0;
         } catch (e) {
           if (kDebugMode) {
-            debugPrint(
+            logger.e(
               '[SyncEngine] Failed to sync ${mutation.entityType}/${mutation.entityId}: $e',
             );
           }
@@ -107,7 +106,7 @@ class SyncEngine {
 
           if (retryCount >= _maxRetries) {
             if (kDebugMode) {
-              debugPrint(
+              logger.w(
                 '[SyncEngine] Max retries reached for mutation ${mutation.id}, marking as permanently failed',
               );
             }
@@ -127,7 +126,7 @@ class SyncEngine {
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[SyncEngine] Queue drain error: $e');
+        logger.e('[SyncEngine] Queue drain error: $e');
       }
     }
 
@@ -175,7 +174,7 @@ class SyncEngine {
           if (conflict != null && conflict.resolved) {
             // Supervisor already resolved this, proceed with local data overwrite
             if (kDebugMode) {
-              debugPrint(
+              logger.d(
                 '[SyncEngine] Conflict resolved by supervisor, overwriting server.',
               );
             }

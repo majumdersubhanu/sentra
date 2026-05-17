@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../storage/database.dart';
 import 'package:drift/drift.dart';
+import '../di/logger.dart';
 
 /// Listens to Supabase Realtime changes and reflects them in the local database.
 class RealtimeService {
@@ -42,7 +43,7 @@ class RealtimeService {
       ..subscribe();
 
     if (kDebugMode) {
-      debugPrint('[Realtime] Subscribed to changes');
+      logger.d('[Realtime] Subscribed to changes');
     }
   }
 
