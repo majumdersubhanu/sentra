@@ -2,10 +2,9 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mix/mix.dart';
+import 'package:sentra_ui/sentra_ui.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
 import '../../../shared/providers/reference_data_providers.dart';
 import '../../auth/presentation/auth_view_model.dart';
 import '../domain/inspection.dart';
@@ -95,7 +94,7 @@ class _InspectionCreateScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a work order from suggestions.'),
-          backgroundColor: kDanger,
+          backgroundColor: SentraColors.error,
         ),
       );
       return;
@@ -104,7 +103,7 @@ class _InspectionCreateScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select an inspector.'),
-          backgroundColor: kDanger,
+          backgroundColor: SentraColors.error,
         ),
       );
       return;
@@ -140,7 +139,7 @@ class _InspectionCreateScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Inspection ${inspection.id} submitted'),
-        backgroundColor: kSuccess,
+        backgroundColor: SentraColors.success,
       ),
     );
     context.router.maybePop();
@@ -154,13 +153,11 @@ class _InspectionCreateScreenState
     final inspectionsAsync = ref.watch(localInspectionsProvider);
 
     return Scaffold(
-      backgroundColor: kSurface,
+      backgroundColor: SentraColors.gray50,
       appBar: AppBar(
-        backgroundColor: kSurface,
-        title: Text(
-          'New Inspection',
-          style: TextStyle(fontSize: 18.0.sp, fontWeight: FontWeight.w700),
-        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text('New Inspection', style: SentraTypography.h3),
       ),
       body: Form(
         key: _formKey,
@@ -175,7 +172,9 @@ class _InspectionCreateScreenState
                   loading: () => const LinearProgressIndicator(),
                   error: (err, _) => Text(
                     'Failed to load work orders: $err',
-                    style: TextStyle(color: kDanger, fontSize: 12.0.sp),
+                    style: SentraTypography.bodySmall.copyWith(
+                      color: SentraColors.error,
+                    ),
                   ),
                   data: _buildWorkOrderTypeahead,
                 ),
@@ -187,12 +186,15 @@ class _InspectionCreateScreenState
                   loading: () => const LinearProgressIndicator(),
                   error: (err, _) => Text(
                     'Failed to load users: $err',
-                    style: TextStyle(color: kDanger, fontSize: 12.0.sp),
+                    style: SentraTypography.bodySmall.copyWith(
+                      color: SentraColors.error,
+                    ),
                   ),
                   data: (technicians) => DropdownButtonFormField<String>(
                     initialValue: _selectedInspectorId,
                     decoration: _fd('Select inspector'),
-                    dropdownColor: kSurface,
+                    dropdownColor: Colors.white,
+                    style: SentraTypography.bodyMedium,
                     items: technicians
                         .map(
                           (t) => DropdownMenuItem<String>(
@@ -225,12 +227,15 @@ class _InspectionCreateScreenState
                   loading: () => const LinearProgressIndicator(),
                   error: (err, _) => Text(
                     'Failed to load templates: $err',
-                    style: TextStyle(color: kDanger, fontSize: 12.0.sp),
+                    style: SentraTypography.bodySmall.copyWith(
+                      color: SentraColors.error,
+                    ),
                   ),
                   data: (templates) => DropdownButtonFormField<String>(
                     initialValue: _selectedTemplateId,
                     decoration: _fd('Choose a template'),
-                    dropdownColor: kSurface,
+                    dropdownColor: Colors.white,
+                    style: SentraTypography.bodyMedium,
                     items: [
                       const DropdownMenuItem<String>(
                         value: null,
@@ -267,57 +272,29 @@ class _InspectionCreateScreenState
                 children: [
                   Text(
                     'Checklist Items',
-                    style: TextStyle(
-                      color: kTextSecondary,
-                      fontSize: 13.0.sp,
-                      fontWeight: FontWeight.w600,
+                    style: SentraTypography.label.copyWith(
+                      color: SentraColors.gray700,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: _addItem,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.add_circle_outline,
-                          color: kWarning,
-                          size: 18.0.sp,
-                        ),
-                        SizedBox(width: 4.0.w),
-                        Text(
-                          'Add Item',
-                          style: TextStyle(
-                            color: kWarning,
-                            fontSize: 12.0.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                  TextButton.icon(
+                    onPressed: _addItem,
+                    icon: const Icon(LucideIcons.plusCircle, size: 18),
+                    label: const Text('Add Item'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: SentraColors.primary700,
+                      textStyle: SentraTypography.label,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 12.0.h),
+              SizedBox(height: 8.0.h),
               ...List.generate(_items.length, _buildChecklistItem),
               SizedBox(height: 32.0.h),
               SizedBox(
                 width: double.infinity,
-                height: 48.0.h,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kWarning,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0.r),
-                    ),
-                  ),
+                child: SentraButton(
+                  label: 'Submit Inspection',
                   onPressed: _submit,
-                  child: Text(
-                    'Submit Inspection',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15.0.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
                 ),
               ),
             ],
@@ -331,7 +308,7 @@ class _InspectionCreateScreenState
     if (workOrders.isEmpty) {
       return Text(
         'No work orders available yet.',
-        style: TextStyle(color: kTextMuted, fontSize: 12.0.sp),
+        style: SentraTypography.bodySmall.copyWith(color: SentraColors.gray500),
       );
     }
 
@@ -366,7 +343,7 @@ class _InspectionCreateScreenState
         return TextFormField(
           controller: controller,
           focusNode: focusNode,
-          style: TextStyle(color: kTextPrimary, fontSize: 14.0.sp),
+          style: SentraTypography.bodyMedium,
           decoration: _fd('Search by ID or title'),
           onChanged: (_) {
             if (_selectedWorkOrderId != null) {
@@ -382,9 +359,9 @@ class _InspectionCreateScreenState
         return Align(
           alignment: Alignment.topLeft,
           child: Material(
-            elevation: 6,
-            borderRadius: BorderRadius.circular(10.0.r),
-            color: kSurface,
+            elevation: 4,
+            borderRadius: BorderRadius.circular(SentraSpacing.xs),
+            color: Colors.white,
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxHeight: 220.0.h,
@@ -397,8 +374,11 @@ class _InspectionCreateScreenState
                   final option = options.elementAt(index);
                   return ListTile(
                     dense: true,
-                    title: Text(option.id),
-                    subtitle: Text(option.label),
+                    title: Text(option.id, style: SentraTypography.label),
+                    subtitle: Text(
+                      option.label,
+                      style: SentraTypography.bodySmall,
+                    ),
                     onTap: () => onSelected(option),
                   );
                 },
@@ -414,8 +394,8 @@ class _InspectionCreateScreenState
     final entry = _items[index];
     return Padding(
       padding: EdgeInsets.only(bottom: 12.0.h),
-      child: Box(
-        style: $card().padding(.all(14)),
+      child: SentraCard(
+        padding: const EdgeInsets.all(12),
         child: Column(
           children: [
             Row(
@@ -423,18 +403,22 @@ class _InspectionCreateScreenState
                 GestureDetector(
                   onTap: () => setState(() => entry.isPass = !entry.isPass),
                   child: Container(
-                    width: 36.0.w,
-                    height: 36.0.w,
+                    width: 32.0.w,
+                    height: 32.0.w,
                     decoration: BoxDecoration(
-                      color: (entry.isPass ? kSuccess : kDanger).withValues(
-                        alpha: 0.15,
-                      ),
-                      borderRadius: BorderRadius.circular(8.0.r),
+                      color:
+                          (entry.isPass
+                                  ? SentraColors.success
+                                  : SentraColors.error)
+                              .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(SentraSpacing.xs),
                     ),
                     child: Icon(
-                      entry.isPass ? Icons.check : Icons.close,
-                      color: entry.isPass ? kSuccess : kDanger,
-                      size: 18.0.sp,
+                      entry.isPass ? LucideIcons.check : LucideIcons.x,
+                      color: entry.isPass
+                          ? SentraColors.success
+                          : SentraColors.error,
+                      size: 16,
                     ),
                   ),
                 ),
@@ -442,45 +426,50 @@ class _InspectionCreateScreenState
                 Expanded(
                   child: TextFormField(
                     controller: entry.questionCtrl,
-                    style: TextStyle(color: kTextPrimary, fontSize: 13.0.sp),
+                    style: SentraTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Check item ${index + 1}...',
-                      hintStyle: TextStyle(
-                        color: kTextMuted,
-                        fontSize: 13.0.sp,
+                      hintStyle: SentraTypography.bodyMedium.copyWith(
+                        color: SentraColors.gray500,
                       ),
                       border: InputBorder.none,
                       isDense: true,
-                      contentPadding: EdgeInsets.zero,
                     ),
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Required' : null,
                   ),
                 ),
                 if (_items.length > 1)
-                  GestureDetector(
-                    onTap: () => _removeItem(index),
-                    child: Icon(
-                      Icons.remove_circle_outline,
-                      color: kDanger.withValues(alpha: 0.6),
-                      size: 20.0.sp,
+                  IconButton(
+                    onPressed: () => _removeItem(index),
+                    icon: const Icon(
+                      LucideIcons.minusCircle,
+                      color: SentraColors.error,
+                      size: 18,
                     ),
                   ),
               ],
             ),
-            SizedBox(height: 8.0.h),
+            const Divider(height: 16),
             TextFormField(
               controller: entry.commentsCtrl,
-              style: TextStyle(color: kTextMuted, fontSize: 12.0.sp),
+              style: SentraTypography.bodySmall,
               decoration: InputDecoration(
                 hintText: 'Comments (optional)',
-                hintStyle: TextStyle(
-                  color: kTextMuted.withValues(alpha: 0.5),
-                  fontSize: 12.0.sp,
+                hintStyle: SentraTypography.bodySmall.copyWith(
+                  color: SentraColors.gray500,
                 ),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
+                prefixIcon: const Icon(
+                  LucideIcons.messageSquare,
+                  size: 14,
+                  color: SentraColors.gray500,
+                ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 24),
               ),
             ),
           ],
@@ -494,11 +483,7 @@ class _InspectionCreateScreenState
     children: [
       Text(
         label,
-        style: TextStyle(
-          color: kTextSecondary,
-          fontSize: 13.0.sp,
-          fontWeight: FontWeight.w600,
-        ),
+        style: SentraTypography.label.copyWith(color: SentraColors.gray700),
       ),
       SizedBox(height: 8.0.h),
       child,
@@ -507,22 +492,27 @@ class _InspectionCreateScreenState
 
   InputDecoration _fd(String hint) => InputDecoration(
     hintText: hint,
-    hintStyle: TextStyle(color: kTextMuted, fontSize: 14.0.sp),
+    hintStyle: SentraTypography.bodyMedium.copyWith(
+      color: SentraColors.gray500,
+    ),
     filled: true,
-    fillColor: kSurfaceMuted,
+    fillColor: Colors.white,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: SentraSpacing.m,
+      vertical: SentraSpacing.s,
+    ),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0.r),
-      borderSide: const BorderSide(color: kBorder),
+      borderRadius: BorderRadius.circular(SentraSpacing.xs),
+      borderSide: const BorderSide(color: SentraColors.gray200),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0.r),
-      borderSide: const BorderSide(color: kBorder),
+      borderRadius: BorderRadius.circular(SentraSpacing.xs),
+      borderSide: const BorderSide(color: SentraColors.gray200),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0.r),
-      borderSide: const BorderSide(color: kWarning, width: 1.5),
+      borderRadius: BorderRadius.circular(SentraSpacing.xs),
+      borderSide: const BorderSide(color: SentraColors.primary500, width: 2),
     ),
-    contentPadding: EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 14.0.h),
   );
 }
 

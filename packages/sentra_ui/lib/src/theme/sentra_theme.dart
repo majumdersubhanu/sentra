@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../tokens/sentra_colors.dart';
 import '../tokens/sentra_typography.dart';
-import '../tokens/sentra_spacing.dart';
 
 class SentraTheme {
   static ThemeData get light => ThemeData(
@@ -27,14 +26,6 @@ class SentraTheme {
       bodySmall: SentraTypography.bodySmall,
       labelLarge: SentraTypography.label,
     ),
-    cardTheme: CardTheme(
-      color: Colors.white,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(SentraSpacing.s),
-        borderSide: const BorderSide(color: SentraColors.gray200),
-      ),
-    ),
   );
 
   static ThemeData get dark => ThemeData(
@@ -42,12 +33,12 @@ class SentraTheme {
     brightness: Brightness.dark,
     primaryColor: SentraColors.primary500,
     scaffoldBackgroundColor: const Color(0xFF121212),
-    colorScheme: ColorScheme.dark(
+    colorScheme: const ColorScheme.dark(
       primary: SentraColors.primary500,
       onPrimary: Colors.white,
       secondary: SentraColors.primary100,
       onSecondary: SentraColors.gray900,
-      surface: const Color(0xFF1E1E1E),
+      surface: Color(0xFF1E1E1E),
       onSurface: Colors.white,
       error: SentraColors.error,
     ),

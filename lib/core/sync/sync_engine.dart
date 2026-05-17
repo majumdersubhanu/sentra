@@ -167,33 +167,41 @@ class SyncEngine {
           final serverData = serverResponse;
           final serverUpdatedBy = serverData['updated_by'] as String?;
 
-          // Role-aware conflict check
-          final currentUser = _authRepository.currentUserProfile;
-          if (currentUser != null && currentUser.role.isSupervisorOrAbove) {
-            // Check if server was updated by someone with a lower role
-            // This is a simplification; in real app we'd fetch the role of serverUpdatedBy
-            // For now, if serverUpdatedBy != currentUser.id, we treat as potential conflict
-            if (serverUpdatedBy != null && serverUpdatedBy != currentUser.id) {
-              // Save conflict for review
-              await _db.conflictDao.upsertConflict(
-                ConflictEntriesCompanion(
-                  id: Value(id),
-                  entityType: Value(mutation.entityType),
-                  localData: Value(mutation.payload),
-                  remoteData: Value(jsonEncode(serverData)),
-                  conflictingUserId: Value(serverUpdatedBy),
-                  conflictingUserName: Value(
-                    serverData['updated_by_name'] ?? 'Unknown Technician',
+          // Check if there's a locally resolved conflict for this entity
+          final conflict = await _db.conflictDao.getConflict(
+            id,
+            mutation.entityType,
+          );
+          if (conflict != null && conflict.resolved) {
+            // Supervisor already resolved this, proceed with local data overwrite
+            if (kDebugMode) {
+              debugPrint(
+                '[SyncEngine] Conflict resolved by supervisor, overwriting server.',
+              );
+            }
+            await _db.conflictDao.deleteConflict(id, mutation.entityType);
+          } else {
+            // Role-aware conflict check
+            final currentUser = _authRepository.currentUserProfile;
+            if (currentUser != null && currentUser.role.isSupervisorOrAbove) {
+              if (serverUpdatedBy != null &&
+                  serverUpdatedBy != currentUser.id) {
+                await _db.conflictDao.upsertConflict(
+                  ConflictEntriesCompanion(
+                    id: Value(id),
+                    entityType: Value(mutation.entityType),
+                    localData: Value(mutation.payload),
+                    remoteData: Value(jsonEncode(serverData)),
+                    conflictingUserId: Value(serverUpdatedBy),
+                    conflictingUserName: Value(
+                      serverData['updated_by_name'] ?? 'Unknown Technician',
+                    ),
                   ),
-                ),
-              );
-
-              // We still update the server? User said "supervisor gets the UI if he and technitian have given data that is conflicting"
-              // Usually supervisors "win" automatically in the UI, but here we save for review.
-              // Let's NOT update yet, let the supervisor resolve it.
-              throw Exception(
-                'Conflict detected. Saved for supervisor review.',
-              );
+                );
+                throw Exception(
+                  'Conflict detected. Saved for supervisor review.',
+                );
+              }
             }
           }
         }
@@ -247,12 +255,12 @@ class SyncEngine {
   /// Map entity type to Supabase table name.
   String _tableFor(String entityType) {
     switch (entityType) {
-      case 'work_order':
-        return 'work_orders';
       case 'inspection':
         return 'inspections';
       case 'asset':
         return 'assets';
+      case 'user':
+        return 'users';
       case 'comment':
         return 'work_order_comments';
       case 'attachment':
@@ -276,8 +284,11 @@ class SyncEngine {
       case 'asset':
         await _db.assetDao.markSynced(entityId);
         break;
+      case 'user':
+        // No specific markSynced for users yet, but we can add one if needed
+        break;
       case 'work_order_material':
-        await (update(
+        await (_db.update(
           _db.workOrderMaterialEntries,
         )..where((t) => t.id.equals(entityId))).write(
           const WorkOrderMaterialEntriesCompanion(syncStatus: Value('synced')),

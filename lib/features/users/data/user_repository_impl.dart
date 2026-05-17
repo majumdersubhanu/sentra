@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/error/failures.dart';
 import '../../../core/network/connectivity_service.dart';
@@ -25,17 +27,12 @@ class UserRepositoryImpl implements UserRepository {
             .from('users')
             .select()
             .eq('role', 'technician');
-
         final users = (response as List).map((u) => _mapToProfile(u)).toList();
-
-        // Cache in Drift
         await _db.userDao.upsertUsers(
           users.map((u) => _mapToCompanion(u)).toList(),
         );
-
         return Right(users);
       } else {
-        // Offline: fetch from Drift
         final cached = await _db.userDao.watchUsersByRole('technician').first;
         return Right(cached.map((c) => _mapFromEntry(c)).toList());
       }
@@ -52,17 +49,12 @@ class UserRepositoryImpl implements UserRepository {
             .from('users')
             .select()
             .order('full_name', ascending: true);
-
         final users = (response as List).map((u) => _mapToProfile(u)).toList();
-
-        // Cache in Drift
         await _db.userDao.upsertUsers(
           users.map((u) => _mapToCompanion(u)).toList(),
         );
-
         return Right(users);
       } else {
-        // Offline: fetch all users from local cache
         final cached = await _db.select(_db.userEntries).get();
         return Right(cached.map((c) => _mapFromEntry(c)).toList());
       }
@@ -74,19 +66,69 @@ class UserRepositoryImpl implements UserRepository {
   @override
   Future<Either<Failure, Unit>> updateUserRole(String id, UserRole role) async {
     try {
+      // Local first
+      await _db.userDao.upsertUsers([
+        UserEntriesCompanion(id: Value(id), role: Value(role.name)),
+      ]);
+
+      // Queue for sync
+      await _db.syncQueueDao.enqueue(
+        entityType: 'user',
+        entityId: id,
+        mutationType: 'update',
+        payload: jsonEncode({'id': id, 'role': role.name}),
+      );
+
       if (_connectivity.isOnline) {
         await _supabase.from('users').update({'role': role.name}).eq('id', id);
-        
-        final cached = await _db.userDao.getUserById(id);
-        if (cached != null) {
-          await _db.userDao.upsertUsers([
-            UserEntriesCompanion(id: Value(id), role: Value(role.name))
-          ]);
-        }
-        return const Right(unit);
-      } else {
-        return const Left(DatabaseFailure('Must be online to update roles.'));
       }
+      return const Right(unit);
+    } catch (e) {
+      return Left(DatabaseFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> inviteUser({
+    required String email,
+    required String fullName,
+    required UserRole role,
+  }) async {
+    try {
+      final id = const Uuid().v4();
+      final newUser = UserProfile(
+        id: id,
+        email: email,
+        fullName: fullName,
+        role: role,
+        organizationId: null, // Will be handled by backend trigger or logic
+      );
+
+      // Local first
+      await _db.userDao.upsertUsers([_mapToCompanion(newUser)]);
+
+      // Queue for sync
+      await _db.syncQueueDao.enqueue(
+        entityType: 'user',
+        entityId: id,
+        mutationType: 'create',
+        payload: jsonEncode({
+          'id': id,
+          'email': email,
+          'full_name': fullName,
+          'role': role.name,
+        }),
+      );
+
+      if (_connectivity.isOnline) {
+        await _supabase.from('users').insert({
+          'id': id,
+          'email': email,
+          'full_name': fullName,
+          'role': role.name,
+        });
+      }
+      return const Right(unit);
     } catch (e) {
       return Left(DatabaseFailure(e.toString()));
     }

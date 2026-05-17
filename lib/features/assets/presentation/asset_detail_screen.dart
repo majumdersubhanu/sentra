@@ -2,12 +2,13 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mix/mix.dart';
+import 'package:sentra_ui/sentra_ui.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/mixins/date_format_mixin.dart';
 import '../../../core/mixins/status_color_mixin.dart';
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
 import 'assets_view_model.dart';
+import '../../auth/presentation/auth_view_model.dart';
+import '../domain/asset.dart';
 
 @RoutePage()
 class AssetDetailScreen extends ConsumerWidget
@@ -20,89 +21,56 @@ class AssetDetailScreen extends ConsumerWidget
     final state = ref.watch(assetsViewModelProvider);
     return state.when(
       loading: () => const Scaffold(
-        backgroundColor: kSurface,
+        backgroundColor: SentraColors.gray50,
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (err, _) => Scaffold(
-        backgroundColor: kSurface,
-        appBar: AppBar(backgroundColor: kSurface),
+        backgroundColor: SentraColors.gray50,
+        appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
         body: Center(
-          child: Text(
-            'Error: $err',
-            style: const TextStyle(color: kTextPrimary),
-          ),
+          child: Text('Error: $err', style: SentraTypography.bodyMedium),
         ),
       ),
       data: (assets) {
         final asset = assets.where((a) => a.id == assetId).firstOrNull;
         if (asset == null) {
           return Scaffold(
-            backgroundColor: kSurface,
-            appBar: AppBar(backgroundColor: kSurface),
-            body: const Center(
-              child: Text('Not found', style: TextStyle(color: kTextSecondary)),
+            backgroundColor: SentraColors.gray50,
+            appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+            body: Center(
+              child: Text('Not found', style: SentraTypography.bodyLarge),
             ),
           );
         }
 
-        final statusColor = getStatusColor(asset.status);
+        final badgeType = _getBadgeType(asset.status);
         final daysSince = DateTime.now()
             .difference(asset.lastServicedDate)
             .inDays;
         final healthRatio = (1.0 - (daysSince / 90)).clamp(0.0, 1.0);
 
         return Scaffold(
-          backgroundColor: kSurface,
+          backgroundColor: SentraColors.gray50,
           appBar: AppBar(
-            backgroundColor: kSurface,
-            title: Text(
-              asset.id,
-              style: TextStyle(fontSize: 18.0.sp, fontWeight: FontWeight.w700),
-            ),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            title: Text(asset.id, style: SentraTypography.h3),
           ),
           body: SingleChildScrollView(
             padding: EdgeInsets.all(20.0.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Box(
-                  style: $badge(
-                    statusColor,
-                  ).padding(.horizontal(12).vertical(8)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        getStatusIcon(asset.status),
-                        color: statusColor,
-                        size: 16.0.sp,
-                      ),
-                      SizedBox(width: 6.0.w),
-                      StyledText(
-                        asset.status.name.toUpperCase(),
-                        style: $badgeText(statusColor).fontSize(12),
-                      ),
-                    ],
-                  ),
-                ),
+                SentraBadge(label: asset.status.name, type: badgeType),
                 SizedBox(height: 20.0.h),
-                Text(
-                  asset.name,
-                  style: TextStyle(
-                    color: kTextPrimary,
-                    fontSize: 22.0.sp,
-                    fontWeight: FontWeight.w800,
-                    height: 1.3,
-                  ),
-                ),
-                SizedBox(height: 20.0.h),
+                Text(asset.name, style: SentraTypography.h1),
+                SizedBox(height: 24.0.h),
 
-                Box(
-                  style: $sectionCard(),
+                SentraCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionHeader(Icons.qr_code_2, 'Identification'),
+                      _sectionHeader(LucideIcons.fingerprint, 'Identification'),
                       SizedBox(height: 16.0.h),
                       _detailRow('Asset ID', asset.id),
                       _detailRow('Model Number', asset.modelNumber),
@@ -112,36 +80,42 @@ class AssetDetailScreen extends ConsumerWidget
                 ),
                 SizedBox(height: 16.0.h),
 
-                Box(
-                  style: $sectionCard(),
+                SentraCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionHeader(Icons.location_on_outlined, 'Location'),
+                      _sectionHeader(LucideIcons.mapPin, 'Location'),
                       SizedBox(height: 16.0.h),
                       Row(
                         children: [
                           Container(
                             padding: EdgeInsets.all(10.0.w),
                             decoration: BoxDecoration(
-                              color: kEmerald500.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10.0.r),
+                              color: SentraColors.primary50,
+                              borderRadius: BorderRadius.circular(
+                                SentraSpacing.xs,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.pin_drop,
-                              color: kEmerald500,
-                              size: 22.0.sp,
+                            child: const Icon(
+                              LucideIcons.navigation,
+                              color: SentraColors.primary700,
+                              size: 20,
                             ),
                           ),
-                          SizedBox(width: 14.0.w),
+                          SizedBox(width: 16.0.w),
                           Expanded(
-                            child: Text(
-                              asset.locationCoordinates,
-                              style: TextStyle(
-                                color: kTextPrimary,
-                                fontSize: 14.0.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  asset.locationCoordinates,
+                                  style: SentraTypography.bodyLarge,
+                                ),
+                                Text(
+                                  'Coordinates',
+                                  style: SentraTypography.bodySmall,
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -151,49 +125,38 @@ class AssetDetailScreen extends ConsumerWidget
                 ),
                 SizedBox(height: 16.0.h),
 
-                Box(
-                  style: $sectionCard(),
+                SentraCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionHeader(Icons.build_outlined, 'Maintenance'),
-                      SizedBox(height: 16.0.h),
-                      _detailRow(
-                        'Last Serviced',
-                        formatDate(asset.lastServicedDate),
+                      _sectionHeader(
+                        LucideIcons.activity,
+                        'Maintenance Health',
                       ),
-                      _detailRow('Days Since Service', '$daysSince days'),
-                      SizedBox(height: 8.0.h),
+                      SizedBox(height: 16.0.h),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(6.0.r),
+                        borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: healthRatio,
-                          minHeight: 8.0.h,
-                          backgroundColor: kSurfaceMuted,
-                          color: healthColor(healthRatio),
+                          minHeight: 8,
+                          backgroundColor: SentraColors.gray100,
+                          valueColor: AlwaysStoppedAnimation(
+                            healthColor(healthRatio),
+                          ),
                         ),
                       ),
-                      SizedBox(height: 6.0.h),
+                      SizedBox(height: 12.0.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Service Health',
-                            style: TextStyle(
-                              color: kTextMuted,
-                              fontSize: 11.0.sp,
-                            ),
+                            'Last Serviced: ${formatDate(asset.lastServicedDate)}',
+                            style: SentraTypography.bodySmall,
                           ),
                           Text(
-                            daysSince < 30
-                                ? 'Good'
-                                : daysSince < 60
-                                ? 'Due Soon'
-                                : 'Overdue',
-                            style: TextStyle(
+                            '${(healthRatio * 100).toInt()}%',
+                            style: SentraTypography.label.copyWith(
                               color: healthColor(healthRatio),
-                              fontSize: 11.0.sp,
-                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -205,6 +168,28 @@ class AssetDetailScreen extends ConsumerWidget
               ],
             ),
           ),
+          bottomNavigationBar: Consumer(
+            builder: (context, ref, child) {
+              final user = ref.watch(currentUserProfileProvider);
+              if (user?.role.isSupervisorOrAbove ?? false) {
+                return Container(
+                  padding: const EdgeInsets.all(SentraSpacing.m),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: SentraColors.gray200),
+                    ),
+                  ),
+                  child: SentraButton(
+                    label: 'Decommission Asset',
+                    onPressed: () {},
+                    isPrimary: false,
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         );
       },
     );
@@ -212,27 +197,45 @@ class AssetDetailScreen extends ConsumerWidget
 
   Widget _sectionHeader(IconData icon, String title) => Row(
     children: [
-      Icon(icon, color: kEmerald500, size: 18.0.sp),
+      Icon(icon, size: 16, color: SentraColors.primary500),
       SizedBox(width: 8.0.w),
       Text(
-        title,
-        style: TextStyle(
-          color: kTextPrimary,
-          fontSize: 14.0.sp,
-          fontWeight: FontWeight.w700,
+        title.toUpperCase(),
+        style: SentraTypography.label.copyWith(
+          color: SentraColors.gray500,
+          fontSize: 11,
         ),
       ),
     ],
   );
 
   Widget _detailRow(String label, String value) => Padding(
-    padding: EdgeInsets.only(bottom: 10.0.h),
+    padding: EdgeInsets.symmetric(vertical: 8.0.h),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        StyledText(label, style: $detailLabel()),
-        Flexible(child: StyledText(value, style: $detailValue())),
+        Text(label, style: SentraTypography.bodySmall),
+        Text(value, style: SentraTypography.label),
       ],
     ),
   );
+
+  SentraBadgeType _getBadgeType(AssetOperationalStatus status) {
+    switch (status) {
+      case AssetOperationalStatus.online:
+        return SentraBadgeType.success;
+      case AssetOperationalStatus.maintenance:
+        return SentraBadgeType.warning;
+      case AssetOperationalStatus.offline:
+        return SentraBadgeType.error;
+      case AssetOperationalStatus.decommissioned:
+        return SentraBadgeType.neutral;
+    }
+  }
+
+  Color healthColor(double ratio) {
+    if (ratio >= 0.75) return SentraColors.success;
+    if (ratio >= 0.45) return SentraColors.warning;
+    return SentraColors.error;
+  }
 }

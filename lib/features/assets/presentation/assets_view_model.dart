@@ -24,7 +24,7 @@ final localAssetsProvider = StreamProvider.autoDispose<List<Asset>>((ref) {
             serialNumber: entry.serialNumber,
             locationCoordinates: entry.locationCoordinates,
             status: AssetOperationalStatus.values.firstWhere(
-              (s) => s.name == entry.status,
+              (s) => s.name == entry.operationalStatus,
               orElse: () => AssetOperationalStatus.online,
             ),
             lastServicedDate: entry.lastMaintenanceDate ?? DateTime.now(),

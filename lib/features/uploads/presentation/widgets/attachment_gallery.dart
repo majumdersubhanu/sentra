@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/theme/sentra_tokens.dart';
+import 'package:sentra_ui/sentra_ui.dart';
 import '../../../../shared/domain/attachment.dart';
 import 'local_attachment_image.dart';
 
@@ -24,43 +24,50 @@ class AttachmentGallery extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 16.h),
         child: Center(
           child: Text(
-            'No attachments',
-            style: TextStyle(color: kTextMuted, fontSize: 14.sp),
+            'No attachments provided',
+            style: SentraTypography.bodySmall.copyWith(
+              color: SentraColors.gray500,
+            ),
           ),
         ),
       );
     }
 
     return SizedBox(
-      height: 100.h,
+      height: 100,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: attachments.length,
-        separatorBuilder: (context, index) => SizedBox(width: 8.w),
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: SentraSpacing.s),
         itemBuilder: (context, index) {
           final attachment = attachments[index];
           return GestureDetector(
             onTap: () => _showFullScreen(context, attachment),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.r),
+              borderRadius: BorderRadius.circular(8),
               child: Container(
-                width: 100.h,
-                height: 100.h,
-                color: kBorderMuted,
+                width: 100,
+                height: 100,
+                color: SentraColors.gray100,
                 child: Hero(
                   tag: 'attachment-${attachment.id}',
                   child: attachment.isLocal
                       ? buildLocalAttachmentImage(
                           path: attachment.filePath!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, e, s) =>
-                              const Icon(Icons.broken_image, color: kTextMuted),
+                          errorBuilder: (_, e, s) => const Icon(
+                            Icons.broken_image,
+                            color: SentraColors.gray500,
+                          ),
                         )
                       : Image.network(
                           attachment.fileUrl ?? '',
                           fit: BoxFit.cover,
-                          errorBuilder: (_, e, s) =>
-                              const Icon(Icons.broken_image, color: kTextMuted),
+                          errorBuilder: (_, e, s) => const Icon(
+                            Icons.broken_image,
+                            color: SentraColors.gray500,
+                          ),
                         ),
                 ),
               ),
@@ -86,7 +93,7 @@ class _FullScreenImageViewer extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           attachment.fileName,
-          style: TextStyle(color: Colors.white, fontSize: 16.sp),
+          style: SentraTypography.bodyMedium.copyWith(color: Colors.white),
         ),
       ),
       body: Center(

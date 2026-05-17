@@ -125,8 +125,9 @@ class _WorkOrdersCalendarScreenState
         return Padding(
           padding: const EdgeInsets.only(bottom: SentraSpacing.s),
           child: SentraCard(
-            onTap: () =>
-                context.router.push(WorkOrderDetailRoute(id: order.id)),
+            onTap: () => context.router.push(
+              WorkOrderDetailRoute(workOrderId: order.id),
+            ),
             child: Row(
               children: [
                 Expanded(

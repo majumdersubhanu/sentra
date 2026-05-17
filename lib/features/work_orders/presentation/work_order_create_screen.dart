@@ -1,11 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mix/mix.dart';
-import '../../../core/mixins/status_color_mixin.dart';
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
+import 'package:sentra_ui/sentra_ui.dart';
 import '../domain/work_order.dart';
 import 'work_orders_view_model.dart';
 
@@ -17,14 +13,13 @@ class WorkOrderCreateScreen extends ConsumerStatefulWidget {
       _WorkOrderCreateScreenState();
 }
 
-class _WorkOrderCreateScreenState extends ConsumerState<WorkOrderCreateScreen>
-    with StatusColorMixin {
+class _WorkOrderCreateScreenState extends ConsumerState<WorkOrderCreateScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _assetCtrl = TextEditingController();
   var _priority = WorkOrderPriority.medium;
-  var _date = DateTime.now().add(const Duration(hours: 2));
+  final _date = DateTime.now().add(const Duration(hours: 2));
 
   @override
   void dispose() {
@@ -51,7 +46,7 @@ class _WorkOrderCreateScreenState extends ConsumerState<WorkOrderCreateScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Work order ${wo.id} created'),
-          backgroundColor: kSuccess,
+          backgroundColor: SentraColors.success,
         ),
       );
       context.router.maybePop();
@@ -61,161 +56,63 @@ class _WorkOrderCreateScreenState extends ConsumerState<WorkOrderCreateScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kSurface,
-      appBar: AppBar(
-        backgroundColor: kSurface,
-        title: Text(
-          'New Work Order',
-          style: TextStyle(fontSize: 18.0.sp, fontWeight: FontWeight.w700),
-        ),
-      ),
+      appBar: AppBar(title: Text('New Work Order', style: SentraTypography.h3)),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(20.0.w),
+          padding: const EdgeInsets.all(SentraSpacing.m),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildField(
-                'Title',
-                TextFormField(
-                  controller: _titleCtrl,
-                  style: TextStyle(color: kTextPrimary, fontSize: 14.0.sp),
-                  decoration: _fd('e.g. HVAC Compressor Inspection'),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Title required' : null,
-                ),
+              SentraTextField(
+                label: 'Work Title',
+                hintText: 'e.g. HVAC Compressor Inspection',
+                controller: _titleCtrl,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Title required' : null,
               ),
-              SizedBox(height: 20.0.h),
-              _buildField(
-                'Description',
-                TextFormField(
-                  controller: _descCtrl,
-                  style: TextStyle(color: kTextPrimary, fontSize: 14.0.sp),
-                  maxLines: 4,
-                  decoration: _fd('Describe the work...'),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Required' : null,
-                ),
+              const SizedBox(height: SentraSpacing.m),
+              SentraTextField(
+                label: 'Problem Description',
+                hintText: 'Describe the work to be done...',
+                controller: _descCtrl,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Description required'
+                    : null,
               ),
-              SizedBox(height: 20.0.h),
-              _buildField(
-                'Priority',
-                Box(
-                  style: $card().padding(.all(4)),
-                  child: Row(
-                    children: WorkOrderPriority.values.map((p) {
-                      final sel = p == _priority;
-                      final c = getStatusColor(p);
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _priority = p),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 10.0.h),
-                            decoration: BoxDecoration(
-                              color: sel
-                                  ? c.withValues(alpha: 0.2)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(8.0.r),
-                            ),
-                            child: Center(
-                              child: Text(
-                                p.name.toUpperCase(),
-                                style: TextStyle(
-                                  color: sel ? c : kTextMuted,
-                                  fontSize: 11.0.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
+              const SizedBox(height: SentraSpacing.m),
+              SentraTextField(
+                label: 'Asset ID (Optional)',
+                hintText: 'e.g. AST-1002',
+                controller: _assetCtrl,
               ),
-              SizedBox(height: 20.0.h),
-              _buildField(
-                'Scheduled Date & Time',
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _date,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null && context.mounted) {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.fromDateTime(_date),
-                      );
-                      if (time != null) {
-                        setState(() {
-                          _date = DateTime(
-                            picked.year,
-                            picked.month,
-                            picked.day,
-                            time.hour,
-                            time.minute,
-                          );
-                        });
-                      }
-                    }
-                  },
-                  child: Box(
-                    style: $card().padding(.horizontal(16).vertical(14)),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          color: kAccent,
-                          size: 18.0.sp,
-                        ),
-                        SizedBox(width: 12.0.w),
-                        Text(
-                          '${_date.day}/${_date.month}/${_date.year}  ${_date.hour}:${_date.minute.toString().padLeft(2, '0')}',
-                          style: TextStyle(
-                            color: kTextPrimary,
-                            fontSize: 14.0.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+              const SizedBox(height: SentraSpacing.m),
+              Text('Priority Level', style: SentraTypography.label),
+              const SizedBox(height: SentraSpacing.s),
+              Wrap(
+                spacing: SentraSpacing.s,
+                children: WorkOrderPriority.values.map((p) {
+                  final isSelected = _priority == p;
+                  return ChoiceChip(
+                    label: Text(p.name.toUpperCase()),
+                    selected: isSelected,
+                    onSelected: (val) => setState(() => _priority = p),
+                    selectedColor: SentraColors.primary100,
+                    labelStyle: SentraTypography.label.copyWith(
+                      fontSize: 10,
+                      color: isSelected
+                          ? SentraColors.primary700
+                          : SentraColors.gray500,
                     ),
-                  ),
-                ),
+                  );
+                }).toList(),
               ),
-              SizedBox(height: 20.0.h),
-              _buildField(
-                'Asset ID (optional)',
-                TextFormField(
-                  controller: _assetCtrl,
-                  style: TextStyle(color: kTextPrimary, fontSize: 14.0.sp),
-                  decoration: _fd('e.g. AST-502'),
-                ),
-              ),
-              SizedBox(height: 32.0.h),
+              const SizedBox(height: SentraSpacing.xl),
               SizedBox(
                 width: double.infinity,
-                height: 48.0.h,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0.r),
-                    ),
-                  ),
+                child: SentraButton(
+                  label: 'Create Work Order',
                   onPressed: _submit,
-                  child: Text(
-                    'Create Work Order',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15.0.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
                 ),
               ),
             ],
@@ -224,40 +121,4 @@ class _WorkOrderCreateScreenState extends ConsumerState<WorkOrderCreateScreen>
       ),
     );
   }
-
-  Widget _buildField(String label, Widget child) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: TextStyle(
-          color: kTextSecondary,
-          fontSize: 13.0.sp,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      SizedBox(height: 8.0.h),
-      child,
-    ],
-  );
-
-  InputDecoration _fd(String hint) => InputDecoration(
-    hintText: hint,
-    hintStyle: TextStyle(color: kTextMuted, fontSize: 14.0.sp),
-    filled: true,
-    fillColor: kSurfaceMuted,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0.r),
-      borderSide: const BorderSide(color: kBorder),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0.r),
-      borderSide: const BorderSide(color: kBorder),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12.0.r),
-      borderSide: const BorderSide(color: kAccent, width: 1.5),
-    ),
-    contentPadding: EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 14.0.h),
-  );
 }

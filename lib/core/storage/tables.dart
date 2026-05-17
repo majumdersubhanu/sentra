@@ -205,6 +205,22 @@ class ConflictEntries extends Table {
   Set<Column> get primaryKey => {id, entityType};
 }
 
+/// Local SQLite table for notifications.
+class NotificationEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get message => text()();
+  TextColumn get type => text()(); // 'assignment', 'sla_breach', 'system'
+  TextColumn get entityType => text().nullable()(); // 'work_order', 'asset'
+  TextColumn get entityId => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isRead => boolean().withDefault(const Constant(false))();
+  TextColumn get organizationId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Local table for users, mirrors Supabase `users`.
 class UserEntries extends Table {
   TextColumn get id => text()();

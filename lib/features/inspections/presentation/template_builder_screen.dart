@@ -1,10 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mix/mix.dart';
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
+import 'package:sentra_ui/sentra_ui.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../domain/inspection.dart';
 import 'inspections_view_model.dart';
 import '../../auth/presentation/auth_view_model.dart';
@@ -49,170 +47,92 @@ class _TemplateBuilderScreenState extends ConsumerState<TemplateBuilderScreen> {
         ref.read(currentUserProfileProvider)?.fullName ?? 'Admin';
 
     final template = Inspection(
-      id: 'TMPL-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+      id: 'TMP-${DateTime.now().millisecondsSinceEpoch}',
       templateName: _nameCtrl.text.trim(),
-      workOrderId: 'TEMPLATE', // Special marker
+      workOrderId: '', // Template has no WO
       inspectorName: inspectorName,
-      createdAt: DateTime.now(),
       status: InspectionStatus.draft,
+      createdAt: DateTime.now(),
       items: _itemCtrls
           .asMap()
           .entries
           .map(
             (e) => InspectionItem(
-              id: 'TI-${DateTime.now().microsecondsSinceEpoch}-${e.key}',
+              id: '${e.key}',
               question: e.value.text.trim(),
               isPass: true,
-              sortOrder: e.key,
             ),
           )
           .toList(),
     );
 
     await ref.read(inspectionsViewModelProvider.notifier).submit(template);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Template saved successfully'),
-          backgroundColor: kPositive,
-        ),
-      );
-      context.router.maybePop();
-    }
+    if (mounted) context.router.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kSurface,
       appBar: AppBar(
-        backgroundColor: kSurface,
-        title: Text(
-          'Template Builder',
-          style: TextStyle(fontSize: 18.0.sp, fontWeight: FontWeight.w700),
-        ),
+        title: Text('Template Builder', style: SentraTypography.h3),
       ),
       body: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(20.0.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Template Name',
-                style: TextStyle(
-                  color: kTextSecondary,
-                  fontSize: 13.0.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(height: 8.0.h),
-              TextFormField(
-                controller: _nameCtrl,
-                style: TextStyle(color: kTextPrimary, fontSize: 14.0.sp),
-                decoration: sentraSearchDecoration(
-                  hint: 'e.g. Daily Forklift Inspection',
-                ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
-              ),
-              SizedBox(height: 24.0.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Checklist Items',
-                    style: TextStyle(
-                      color: kTextSecondary,
-                      fontSize: 13.0.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: _addItem,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.add_circle_outline,
-                          color: kBrand,
-                          size: 18.0.sp,
-                        ),
-                        SizedBox(width: 4.0.w),
-                        Text(
-                          'Add Item',
-                          style: TextStyle(
-                            color: kBrand,
-                            fontSize: 12.0.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.0.h),
-              ...List.generate(_itemCtrls.length, _buildChecklistItem),
-              SizedBox(height: 32.0.h),
-              SizedBox(
-                width: double.infinity,
-                child: Box(
-                  style: $primaryButton(),
-                  child: GestureDetector(
-                    onTap: _submit,
-                    child: Text(
-                      'Save Template',
-                      style: TextStyle(
-                        color: kSurface,
-                        fontSize: 15.0.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChecklistItem(int index) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.0.h),
-      child: Box(
-        style: $card().padding(.all(14)),
-        child: Row(
+        child: ListView(
+          padding: const EdgeInsets.all(SentraSpacing.m),
           children: [
-            Icon(Icons.drag_indicator, color: kTextMuted, size: 20.0.sp),
-            SizedBox(width: 12.0.w),
-            Expanded(
-              child: TextFormField(
-                controller: _itemCtrls[index],
-                style: TextStyle(color: kTextPrimary, fontSize: 13.0.sp),
-                decoration: InputDecoration(
-                  hintText: 'Check item ${index + 1}...',
-                  hintStyle: TextStyle(color: kTextMuted, fontSize: 13.0.sp),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
+            SentraTextField(
+              label: 'Template Name',
+              hintText: 'e.g. Monthly Safety Audit',
+              controller: _nameCtrl,
+              validator: (v) =>
+                  (v == null || v.isEmpty) ? 'Name required' : null,
+            ),
+            const SizedBox(height: SentraSpacing.l),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Questions', style: SentraTypography.label),
+                TextButton.icon(
+                  onPressed: _addItem,
+                  icon: const Icon(LucideIcons.plusCircle, size: 16),
+                  label: const Text('Add Question'),
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+              ],
+            ),
+            const SizedBox(height: SentraSpacing.s),
+            ..._itemCtrls.asMap().entries.map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: SentraSpacing.m),
+                child: SentraCard(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: e.value,
+                          decoration: const InputDecoration(
+                            hintText: 'Enter question...',
+                            border: InputBorder.none,
+                          ),
+                          validator: (v) =>
+                              (v == null || v.isEmpty) ? 'Required' : null,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => _removeItem(e.key),
+                        icon: const Icon(
+                          LucideIcons.trash2,
+                          color: SentraColors.error,
+                          size: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            if (_itemCtrls.length > 1)
-              GestureDetector(
-                onTap: () => _removeItem(index),
-                child: Icon(
-                  Icons.remove_circle_outline,
-                  color: kCritical,
-                  size: 20.0.sp,
-                ),
-              ),
+            const SizedBox(height: SentraSpacing.xl),
+            SentraButton(label: 'Save Template', onPressed: _submit),
           ],
         ),
       ),

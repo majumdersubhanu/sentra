@@ -2,12 +2,9 @@ import 'dart:convert';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mix/mix.dart';
+import 'package:sentra_ui/sentra_ui.dart';
 
 import '../../../core/storage/database.dart';
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
 import 'conflicts_view_model.dart';
 
 @RoutePage()
@@ -56,7 +53,7 @@ class _ConflictResolutionScreenState
             content: Text(
               'Conflict resolved using ${useLocal ? "Local" : "Remote"} data',
             ),
-            backgroundColor: kSuccess,
+            backgroundColor: SentraColors.success,
           ),
         );
         context.router.back();
@@ -64,7 +61,10 @@ class _ConflictResolutionScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: kDanger),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: SentraColors.error,
+          ),
         );
       }
     } finally {
@@ -75,24 +75,21 @@ class _ConflictResolutionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kSurface,
       appBar: AppBar(
-        title: Text('Resolve Conflict', style: TextStyle(fontSize: 18.0.sp)),
-        backgroundColor: kSurface,
-        elevation: 0,
+        title: Text('Resolve Conflict', style: SentraTypography.h3),
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: EdgeInsets.all(16.0.w),
+            padding: const EdgeInsets.all(SentraSpacing.m),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'A conflict was detected for ${widget.conflict.entityType} ${widget.conflict.id}. Please choose which version to keep.',
-                  style: TextStyle(color: kTextSecondary, fontSize: 14.0.sp),
+                  'Choose which version to keep for ${widget.conflict.entityType} ${widget.conflict.id}.',
+                  style: SentraTypography.bodyMedium,
                 ),
-                SizedBox(height: 24.0.h),
+                const SizedBox(height: SentraSpacing.l),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -104,7 +101,7 @@ class _ConflictResolutionScreenState
                         onSelect: () => _resolve(true),
                       ),
                     ),
-                    SizedBox(width: 16.0.w),
+                    const SizedBox(width: SentraSpacing.m),
                     Expanded(
                       child: _DataColumn(
                         title: 'Remote Version',
@@ -146,32 +143,29 @@ class _DataColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.bold, color: kTextPrimary),
-        ),
-        SizedBox(height: 12.0.h),
-        Box(
-          style: $sectionCard().paddingAll(12.0.w).color(kSurface),
+        Text(title, style: SentraTypography.label),
+        const SizedBox(height: SentraSpacing.s),
+        SentraCard(
+          padding: const EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: data.entries.map((e) {
+            children: data.entries.take(10).map((e) {
               return Padding(
-                padding: EdgeInsets.only(bottom: 8.0.h),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       e.key.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10.0.sp,
-                        color: kTextMuted,
-                        fontWeight: FontWeight.w600,
+                      style: SentraTypography.label.copyWith(
+                        fontSize: 8,
+                        color: SentraColors.gray500,
                       ),
                     ),
                     Text(
                       e.value.toString(),
-                      style: TextStyle(fontSize: 12.0.sp, color: kTextPrimary),
+                      style: SentraTypography.bodySmall,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -179,20 +173,11 @@ class _DataColumn extends StatelessWidget {
             }).toList(),
           ),
         ),
-        SizedBox(height: 16.0.h),
-        PressableBox(
-          onPress: onSelect,
-          style: BoxStyler()
-              .paddingAll(10.0.w)
-              .borderRadius(.circular(8.0.r))
-              .color(isLocal ? kAccent : kInfo),
-          child: StyledText(
-            'Use This Version',
-            style: TextStyler()
-                .color(Colors.white)
-                .fontWeight(FontWeight.bold)
-                .textAlign(TextAlign.center),
-          ),
+        const SizedBox(height: SentraSpacing.m),
+        SentraButton(
+          label: 'Use This',
+          onPressed: onSelect,
+          isPrimary: isLocal,
         ),
       ],
     );

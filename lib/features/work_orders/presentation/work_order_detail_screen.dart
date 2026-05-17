@@ -10,6 +10,8 @@ import '../application/work_order_pdf_service.dart';
 import '../../uploads/presentation/widgets/attachment_picker.dart';
 import '../../uploads/presentation/widgets/attachment_gallery.dart';
 import '../../uploads/presentation/attachments_provider.dart';
+import '../../auth/presentation/auth_view_model.dart';
+import 'package:fpdart/fpdart.dart';
 
 @RoutePage()
 class WorkOrderDetailScreen extends ConsumerWidget {
@@ -33,74 +35,82 @@ class WorkOrderDetailScreen extends ConsumerWidget {
           return const Scaffold(body: Center(child: Text('Not found')));
 
         return Scaffold(
-          appBar: AppBar(
-            title: Text(wo.id, style: SentraTypography.h3),
-            actions: [
-              IconButton(
-                icon: const Icon(LucideIcons.fileDown),
-                onPressed: () => WorkOrderPdfService.generateAndPrint(wo),
-              ),
-              IconButton(
-                icon: const Icon(LucideIcons.refreshCw),
-                onPressed: () =>
-                    ref.invalidate(workOrderByIdProvider(workOrderId)),
-              ),
-            ],
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(SentraSpacing.m),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Header Card
-                _buildHeaderCard(wo),
-                const SizedBox(height: SentraSpacing.m),
-
-                // 2. Info Grid
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _buildLocationCard(wo)),
-                    const SizedBox(width: SentraSpacing.m),
-                    Expanded(child: _buildScheduleCard(wo)),
-                  ],
-                ),
-                const SizedBox(height: SentraSpacing.m),
-
-                // 3. Safety Card
-                _buildSafetyCard(wo),
-                const SizedBox(height: SentraSpacing.m),
-
-                // 4. Description
-                SentraCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _sectionTitle('Problem Description'),
-                      const SizedBox(height: SentraSpacing.s),
-                      Text(wo.description, style: SentraTypography.bodyMedium),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: SentraSpacing.m),
-
-                // 5. Attachments
-                _buildAttachmentsSection(context, ref, wo),
-                const SizedBox(height: SentraSpacing.m),
-
-                // 6. Comments
-                WorkOrderCommentsSection(workOrderId: workOrderId),
-                const SizedBox(height: SentraSpacing.xxl),
-              ],
-            ),
-          ),
-          bottomNavigationBar: _buildBottomActions(wo),
+          appBar: _DetailAppBar(workOrderId: workOrderId, wo: wo),
+          body: _DetailBody(workOrderId: workOrderId, wo: wo),
+          bottomNavigationBar: _DetailBottomActions(wo: wo),
         );
       },
     );
   }
+}
 
-  Widget _buildHeaderCard(WorkOrder wo) {
+class _DetailAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String workOrderId;
+  final WorkOrder wo;
+  const _DetailAppBar({required this.workOrderId, required this.wo});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text(wo.id, style: SentraTypography.h3),
+      actions: [
+        IconButton(
+          icon: const Icon(LucideIcons.fileDown),
+          onPressed: () => WorkOrderPdfService.generateAndPrint(wo),
+        ),
+        Consumer(
+          builder: (context, ref, _) {
+            return IconButton(
+              icon: const Icon(LucideIcons.refreshCw),
+              onPressed: () =>
+                  ref.invalidate(workOrderByIdProvider(workOrderId)),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class _DetailBody extends ConsumerWidget {
+  final String workOrderId;
+  final WorkOrder wo;
+  const _DetailBody({required this.workOrderId, required this.wo});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(SentraSpacing.m),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _HeaderCard(wo: wo),
+          const SizedBox(height: SentraSpacing.m),
+          _InfoGrid(wo: wo),
+          const SizedBox(height: SentraSpacing.m),
+          _SafetyCard(wo: wo),
+          const SizedBox(height: SentraSpacing.m),
+          _DescriptionCard(description: wo.description),
+          const SizedBox(height: SentraSpacing.m),
+          _AttachmentsSection(wo: wo),
+          const SizedBox(height: SentraSpacing.m),
+          WorkOrderCommentsSection(workOrderId: workOrderId),
+          const SizedBox(height: SentraSpacing.xxl),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderCard extends StatelessWidget {
+  final WorkOrder wo;
+  const _HeaderCard({required this.wo});
+
+  @override
+  Widget build(BuildContext context) {
     return SentraCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,26 +128,14 @@ class WorkOrderDetailScreen extends ConsumerWidget {
           const SizedBox(height: SentraSpacing.s),
           Row(
             children: [
-              const Icon(
-                LucideIcons.tag,
-                size: 14,
-                color: SentraColors.gray500,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                wo.workType?.name ?? 'General Work',
-                style: SentraTypography.bodySmall,
+              _MetaItem(
+                icon: LucideIcons.tag,
+                text: wo.workType?.name ?? 'General Work',
               ),
               const SizedBox(width: 16),
-              const Icon(
-                LucideIcons.alertCircle,
-                size: 14,
-                color: SentraColors.gray500,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Priority: ${wo.priority.name}',
-                style: SentraTypography.bodySmall,
+              _MetaItem(
+                icon: LucideIcons.alertCircle,
+                text: 'Priority: ${wo.priority.name}',
               ),
             ],
           ),
@@ -145,68 +143,147 @@ class WorkOrderDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildLocationCard(WorkOrder wo) {
+class _MetaItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _MetaItem({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: SentraColors.gray500),
+        const SizedBox(width: 4),
+        Text(text, style: SentraTypography.bodySmall),
+      ],
+    );
+  }
+}
+
+class _InfoGrid extends StatelessWidget {
+  final WorkOrder wo;
+  const _InfoGrid({required this.wo});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _InfoCard(
+            title: 'Site Info',
+            items: [
+              _InfoItem(
+                icon: LucideIcons.mapPin,
+                text: wo.siteLocation ?? 'No location',
+              ),
+              _InfoItem(
+                icon: LucideIcons.building,
+                text: wo.businessUnit ?? 'No unit',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: SentraSpacing.m),
+        Expanded(
+          child: _InfoCard(
+            title: 'Schedule',
+            items: [
+              _InfoItem(
+                icon: LucideIcons.calendar,
+                text: wo.scheduledStart?.toString().split(' ')[0] ?? 'Not set',
+              ),
+              _InfoItem(
+                icon: LucideIcons.clock,
+                text:
+                    'SLA: ${wo.slaTarget?.toString().split(' ')[1].substring(0, 5) ?? 'N/A'}',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final String title;
+  final List<Widget> items;
+  const _InfoCard({required this.title, required this.items});
+
+  @override
+  Widget build(BuildContext context) {
     return SentraCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('Site Info'),
+          _SectionTitle(title: title),
           const SizedBox(height: SentraSpacing.s),
-          _infoItem(LucideIcons.mapPin, wo.siteLocation ?? 'No location'),
-          _infoItem(LucideIcons.building, wo.businessUnit ?? 'No unit'),
+          ...items,
         ],
       ),
     );
   }
+}
 
-  Widget _buildScheduleCard(WorkOrder wo) {
+class _SafetyCard extends StatelessWidget {
+  final WorkOrder wo;
+  const _SafetyCard({required this.wo});
+
+  @override
+  Widget build(BuildContext context) {
     return SentraCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('Schedule'),
-          const SizedBox(height: SentraSpacing.s),
-          _infoItem(
-            LucideIcons.calendar,
-            wo.scheduledStart?.toString().split(' ')[0] ?? 'Not set',
-          ),
-          _infoItem(
-            LucideIcons.clock,
-            'SLA: ${wo.slaTarget?.toString().split(' ')[1].substring(0, 5) ?? 'N/A'}',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSafetyCard(WorkOrder wo) {
-    return SentraCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionTitle('Safety Management'),
+          const _SectionTitle(title: 'Safety Management'),
           const SizedBox(height: SentraSpacing.s),
           Wrap(
             spacing: SentraSpacing.s,
             runSpacing: SentraSpacing.s,
             children: [
-              _safetyChip('Permit', wo.permitRequirement),
-              _safetyChip('Confined Space', wo.confinedSpaceEntry),
-              _safetyChip('Hot Work', wo.hotWorkRequired),
-              _safetyChip('LOTO', wo.lockoutTagoutRequired),
+              _SafetyChip(label: 'Permit', active: wo.permitRequirement),
+              _SafetyChip(
+                label: 'Confined Space',
+                active: wo.confinedSpaceEntry,
+              ),
+              _SafetyChip(label: 'Hot Work', active: wo.hotWorkRequired),
+              _SafetyChip(label: 'LOTO', active: wo.lockoutTagoutRequired),
             ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildAttachmentsSection(
-    BuildContext context,
-    WidgetRef ref,
-    WorkOrder wo,
-  ) {
+class _DescriptionCard extends StatelessWidget {
+  final String description;
+  const _DescriptionCard({required this.description});
+
+  @override
+  Widget build(BuildContext context) {
+    return SentraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle(title: 'Problem Description'),
+          const SizedBox(height: SentraSpacing.s),
+          Text(description, style: SentraTypography.bodyMedium),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttachmentsSection extends ConsumerWidget {
+  final WorkOrder wo;
+  const _AttachmentsSection({required this.wo});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return SentraCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,24 +291,13 @@ class WorkOrderDetailScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _sectionTitle('Attachments'),
+              const _SectionTitle(title: 'Attachments'),
               IconButton(
                 icon: const Icon(
                   LucideIcons.plus,
                   color: SentraColors.primary500,
                 ),
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (_) => Padding(
-                      padding: const EdgeInsets.all(SentraSpacing.m),
-                      child: AttachmentPicker(
-                        entityId: wo.id,
-                        entityType: 'work_order',
-                      ),
-                    ),
-                  );
-                },
+                onPressed: () => _pickAttachment(context),
               ),
             ],
           ),
@@ -248,7 +314,26 @@ class WorkOrderDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBottomActions(WorkOrder wo) {
+  void _pickAttachment(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(SentraSpacing.m),
+        child: AttachmentPicker(entityId: wo.id, entityType: 'work_order'),
+      ),
+    );
+  }
+}
+
+class _DetailBottomActions extends ConsumerWidget {
+  final WorkOrder wo;
+  const _DetailBottomActions({required this.wo});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProfileProvider);
+    final canAssign = user?.role.isSupervisorOrAbove ?? false;
+
     return Container(
       padding: const EdgeInsets.all(SentraSpacing.m),
       decoration: const BoxDecoration(
@@ -257,30 +342,92 @@ class WorkOrderDetailScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
+          if (canAssign) ...[
+            Expanded(
+              child: SentraButton(
+                label: 'Assign',
+                onPressed: () => _showAssignmentDialog(context, ref, wo),
+                isPrimary: false,
+                icon: const Icon(
+                  LucideIcons.userPlus,
+                  size: 16,
+                  color: SentraColors.primary700,
+                ),
+              ),
+            ),
+            const SizedBox(width: SentraSpacing.m),
+          ],
           Expanded(
             child: SentraButton(
-              label: 'Update Status',
-              onPressed: () {},
-              isPrimary: false,
+              label: wo.status == WorkOrderStatus.inProgress
+                  ? 'Complete'
+                  : 'Start Work',
+              onPressed: () {
+                final newStatus = wo.status == WorkOrderStatus.inProgress
+                    ? WorkOrderStatus.completed
+                    : WorkOrderStatus.inProgress;
+                ref
+                    .read(workOrdersViewModelProvider.notifier)
+                    .updateStatus(wo, newStatus);
+              },
             ),
-          ),
-          const SizedBox(width: SentraSpacing.m),
-          Expanded(
-            child: SentraButton(label: 'Start Work', onPressed: () {}),
           ),
         ],
       ),
     );
   }
 
-  Widget _sectionTitle(String title) {
+  void _showAssignmentDialog(
+    BuildContext context,
+    WidgetRef ref,
+    WorkOrder wo,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(SentraSpacing.m),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Assign Technician', style: SentraTypography.h3),
+            const SizedBox(height: SentraSpacing.m),
+            ListTile(
+              leading: const CircleAvatar(child: Text('JD')),
+              title: const Text('John Doe'),
+              onTap: () {
+                ref.read(workOrdersViewModelProvider.notifier).mutate(() async {
+                  return const Right(unit);
+                });
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
     return Text(
       title,
       style: SentraTypography.label.copyWith(color: SentraColors.gray500),
     );
   }
+}
 
-  Widget _infoItem(IconData icon, String text) {
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _InfoItem({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -298,13 +445,20 @@ class WorkOrderDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _safetyChip(String label, bool active) {
+class _SafetyChip extends StatelessWidget {
+  final String label;
+  final bool active;
+  const _SafetyChip({required this.label, required this.active});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: active
-            ? SentraColors.error.withOpacity(0.1)
+            ? SentraColors.error.withValues(alpha: 0.1)
             : SentraColors.gray100,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
@@ -320,20 +474,20 @@ class WorkOrderDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  SentraBadgeType _getBadgeType(WorkOrderStatus status) {
-    switch (status) {
-      case WorkOrderStatus.completed:
-      case WorkOrderStatus.verified:
-        return SentraBadgeType.success;
-      case WorkOrderStatus.inProgress:
-        return SentraBadgeType.info;
-      case WorkOrderStatus.onHold:
-        return SentraBadgeType.warning;
-      case WorkOrderStatus.cancelled:
-        return SentraBadgeType.error;
-      default:
-        return SentraBadgeType.neutral;
-    }
+SentraBadgeType _getBadgeType(WorkOrderStatus status) {
+  switch (status) {
+    case WorkOrderStatus.completed:
+    case WorkOrderStatus.verified:
+      return SentraBadgeType.success;
+    case WorkOrderStatus.inProgress:
+      return SentraBadgeType.info;
+    case WorkOrderStatus.onHold:
+      return SentraBadgeType.warning;
+    case WorkOrderStatus.cancelled:
+      return SentraBadgeType.error;
+    default:
+      return SentraBadgeType.neutral;
   }
 }

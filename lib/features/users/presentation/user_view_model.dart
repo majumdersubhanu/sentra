@@ -30,11 +30,25 @@ class UsersViewModel extends _$UsersViewModel {
   Future<void> updateRole(String userId, UserRole newRole) async {
     final repo = getIt<UserRepository>();
     final result = await repo.updateUserRole(userId, newRole);
+    result.fold((failure) => throw Exception(failure.message), (_) {
+      ref.invalidateSelf();
+    });
+  }
+
+  Future<void> inviteUser({
+    required String email,
+    required String fullName,
+    required UserRole role,
+  }) async {
+    final repo = getIt<UserRepository>();
+    final result = await repo.inviteUser(
+      email: email,
+      fullName: fullName,
+      role: role,
+    );
     result.fold(
       (failure) => throw Exception(failure.message),
-      (_) {
-        ref.invalidateSelf();
-      },
+      (_) => ref.invalidateSelf(),
     );
   }
 }

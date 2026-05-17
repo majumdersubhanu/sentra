@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uuid/uuid.dart';
+import 'package:sentra_ui/sentra_ui.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/theme/sentra_tokens.dart';
 import '../../domain/attachment_repository.dart';
 import '../attachments_provider.dart';
 
@@ -52,16 +52,15 @@ class AttachmentPicker extends ConsumerWidget {
           (failure) => ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to queue: ${failure.message}'),
-              backgroundColor: kCritical,
+              backgroundColor: SentraColors.error,
             ),
           ),
           (_) {
-            // Refresh the gallery
             ref.invalidate(attachmentsProvider(entityId));
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Image queued for upload'),
-                backgroundColor: kPositive,
+                backgroundColor: SentraColors.success,
               ),
             );
           },
@@ -72,7 +71,7 @@ class AttachmentPicker extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to pick image: $e'),
-            backgroundColor: kCritical,
+            backgroundColor: SentraColors.error,
           ),
         );
       }
@@ -81,38 +80,39 @@ class AttachmentPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.camera_alt),
-            label: const Text('Camera'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kBrand,
-              foregroundColor: kSurface,
-              padding: EdgeInsets.symmetric(vertical: 12.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+        Text('Add Attachment', style: SentraTypography.h3),
+        const SizedBox(height: SentraSpacing.m),
+        Row(
+          children: [
+            Expanded(
+              child: SentraButton(
+                label: 'Camera',
+                icon: const Icon(
+                  LucideIcons.camera,
+                  size: 16,
+                  color: Colors.white,
+                ),
+                onPressed: () => _pickImage(context, ref, ImageSource.camera),
               ),
             ),
-            onPressed: () => _pickImage(context, ref, ImageSource.camera),
-          ),
-        ),
-        SizedBox(width: 16.w),
-        Expanded(
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.photo_library),
-            label: const Text('Gallery'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: kBrand,
-              side: const BorderSide(color: kBrand),
-              padding: EdgeInsets.symmetric(vertical: 12.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+            const SizedBox(width: SentraSpacing.m),
+            Expanded(
+              child: SentraButton(
+                label: 'Gallery',
+                isPrimary: false,
+                icon: const Icon(
+                  LucideIcons.image,
+                  size: 16,
+                  color: SentraColors.primary700,
+                ),
+                onPressed: () => _pickImage(context, ref, ImageSource.gallery),
               ),
             ),
-            onPressed: () => _pickImage(context, ref, ImageSource.gallery),
-          ),
+          ],
         ),
       ],
     );

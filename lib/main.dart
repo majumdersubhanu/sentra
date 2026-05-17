@@ -48,5 +48,5 @@ void main() async {
     realtimeService.start();
   }
 
-  runApp(const ProviderScope(child: SentraApp()));
+  runApp(ProviderScope(child: SentraApp()));
 }

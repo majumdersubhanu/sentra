@@ -12,23 +12,28 @@ class SentraCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Style(
-      container.color(Colors.white),
-      container.padding(padding ?? const EdgeInsets.all(SentraSpacing.m)),
-      container.borderRadius(SentraSpacing.s),
-      container.border.all(color: SentraColors.gray200, width: 1),
-      container.boxShadow(
-        color: Colors.black.withOpacity(0.05),
-        offset: const Offset(0, 2),
-        blurRadius: 4,
-      ),
-      onHover(container.border.color(SentraColors.primary500)),
-    );
+    final style = BoxStyler()
+        .color(Colors.white)
+        .borderRadiusAll(const Radius.circular(SentraSpacing.s))
+        .borderAll(color: SentraColors.gray200, width: 1);
 
     if (onTap != null) {
-      return PressableBox(onPress: onTap, style: style, child: child);
+      return PressableBox(
+        onPress: onTap,
+        style: style,
+        child: Padding(
+          padding: padding ?? const EdgeInsets.all(SentraSpacing.m),
+          child: child,
+        ),
+      );
     }
 
-    return Box(style: style, child: child);
+    return Box(
+      style: style,
+      child: Padding(
+        padding: padding ?? const EdgeInsets.all(SentraSpacing.m),
+        child: child,
+      ),
+    );
   }
 }

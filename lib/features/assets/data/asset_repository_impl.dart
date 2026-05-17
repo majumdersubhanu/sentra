@@ -40,17 +40,6 @@ class AssetRepositoryImpl implements AssetRepository {
       lastServicedDate: DateTime.now().subtract(const Duration(days: 15)),
       createdAt: DateTime.now().subtract(const Duration(days: 200)),
     ),
-    Asset(
-      id: 'AST-882',
-      name: 'Automated Hydraulic Security Gate',
-      qrCode: 'QR-SG200',
-      modelNumber: 'SG-200PRO',
-      serialNumber: 'SN-554112-G',
-      locationCoordinates: 'Main Entrance Checkpoint',
-      status: AssetOperationalStatus.online,
-      lastServicedDate: DateTime.now().subtract(const Duration(days: 5)),
-      createdAt: DateTime.now().subtract(const Duration(days: 100)),
-    ),
   ];
 
   final List<Asset> _localMockAssets = List.from(_mockAssets);
@@ -122,11 +111,9 @@ class AssetRepositoryImpl implements AssetRepository {
   @override
   Future<Either<Failure, Asset>> createAsset(Asset asset) async {
     try {
-      // Insert into local database
       final companion = _toCompanion(asset, syncStatus: 'pending');
       await _db.assetDao.upsertAsset(companion);
 
-      // Enqueue for sync
       await _db.syncQueueDao.enqueue(
         entityType: 'asset',
         entityId: asset.id,
@@ -157,7 +144,7 @@ class AssetRepositoryImpl implements AssetRepository {
       'model_number': asset.modelNumber,
       'serial_number': asset.serialNumber,
       'location_coordinates': asset.locationCoordinates,
-      'status': asset.status.name,
+      'operational_status': asset.status.name,
       'last_maintenance_date': asset.lastServicedDate.toIso8601String(),
       'created_at': asset.createdAt.toIso8601String(),
       'organization_id': asset.organizationId,
@@ -172,7 +159,7 @@ class AssetRepositoryImpl implements AssetRepository {
       modelNumber: json['model_number'] as String? ?? '',
       serialNumber: json['serial_number'] as String? ?? '',
       locationCoordinates: json['location_coordinates'] as String? ?? '',
-      status: _parseStatus(json['status'] as String?),
+      status: _parseStatus(json['operational_status'] as String?),
       lastServicedDate: json['last_maintenance_date'] != null
           ? DateTime.parse(json['last_maintenance_date'] as String)
           : DateTime.now(),
@@ -191,7 +178,7 @@ class AssetRepositoryImpl implements AssetRepository {
       modelNumber: entry.modelNumber,
       serialNumber: entry.serialNumber,
       locationCoordinates: entry.locationCoordinates,
-      status: _parseStatus(entry.status),
+      status: _parseStatus(entry.operationalStatus),
       lastServicedDate: entry.lastMaintenanceDate ?? DateTime.now(),
       createdAt: entry.createdAt,
       organizationId: entry.organizationId,
@@ -209,7 +196,7 @@ class AssetRepositoryImpl implements AssetRepository {
       modelNumber: Value(a.modelNumber),
       serialNumber: Value(a.serialNumber),
       locationCoordinates: Value(a.locationCoordinates),
-      status: Value(a.status.name),
+      operationalStatus: Value(a.status.name),
       lastMaintenanceDate: Value(a.lastServicedDate),
       createdAt: Value(a.createdAt),
       organizationId: Value(a.organizationId),
@@ -218,17 +205,9 @@ class AssetRepositoryImpl implements AssetRepository {
   }
 
   static AssetOperationalStatus _parseStatus(String? status) {
-    switch (status) {
-      case 'operational':
-        return AssetOperationalStatus.online;
-      case 'maintenance':
-        return AssetOperationalStatus.maintenance;
-      case 'offline':
-        return AssetOperationalStatus.offline;
-      case 'decommissioned':
-        return AssetOperationalStatus.decommissioned;
-      default:
-        return AssetOperationalStatus.online;
-    }
+    return AssetOperationalStatus.values.firstWhere(
+      (e) => e.name == status,
+      orElse: () => AssetOperationalStatus.online,
+    );
   }
 }

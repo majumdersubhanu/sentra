@@ -68,6 +68,8 @@ dependencies:
   table_calendar: ^3.2.0
   pdf: ^3.12.0
   printing: ^5.14.3
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
 
 dev_dependencies:
   flutter_test:
@@ -79,11 +81,13 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: any
-  build_runner: any
+  build_runner: ^2.15.0
   auto_route_generator: any
   drift_dev: any
   injectable_generator: any
   riverpod_generator: any
+  mockito: ^5.6.4
+  mocktail: ^1.0.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

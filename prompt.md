@@ -1,0 +1,15 @@
+Here are my issues:
+- Extend the functionality of the app, currently everything seems very amateurish, feels like it is built for a resume instead of being a launchable app. Here take an example of a professional work order in a FSM software for your reference [@work_order_example.md](file:///home/subhanu/work/sentra/work_order_example.md) to design the software around.
+- The UI looks decent, but I think still needs a lot of improvement from polish PoV. Take inspo from OSS design systems like IBM Carbon, Shoppify Polaris and Ant Design and design your very own design system from scratch that resonates with the project.
+- Remove web support from the platform. Keep the app only for desktop, and mobile (No web as of now, this will include fixing up Drift too, since android can't read the Drift DB).
+- Add more granular control to the profile/settings page like user roles and permissions, theme toggle etc but maintain RBAC policies.
+- When the first user from an organization signs up, they should be the admin of the organization by default and can add more users to the organization and assign them roles and permissions. This will be a part of the profile/settings page.
+- Add a feature to export the work orders in PDF format, so that users can easily share the work orders with their clients or team members who may not have access to the app.
+- Implement a notification system that alerts users about upcoming deadlines, new work orders, or any changes made to existing work orders. This can be done through in-app notifications.
+- Integrate a calendar view that allows users to see their work orders in a calendar format, making it easier to manage their schedule and deadlines.
+- Add a search functionality that allows users to quickly find specific work orders based on keywords, dates, or other relevant criteria. This will enhance the user experience and make it easier to navigate through the app.
+- Implement a feature that allows users to attach files or images to their work orders, providing additional context and information for the tasks at hand. This can be particularly useful for work orders that require visual references or supporting documents.
+- Add a feature that allows users to assign work orders to specific team members, making it easier to delegate tasks and track progress. This can be done through a simple dropdown menu or a drag-androp interface.
+- /research FSM software and identify the key features and functionalities that are commonly found in these types of applications. This will help you understand the industry standards and ensure that your app meets the expectations of your target audience.
+- /research design systems and identify the best practices for creating a cohesive and visually appealing design system. This will help you create a unique design system that resonates with your project and enhances the overall user experience.
+- /research user roles and permissions in software applications to understand how to implement RBAC policies effectively. This will help you create a robust and secure system for managing user access and permissions within your app.

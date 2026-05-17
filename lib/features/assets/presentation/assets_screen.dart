@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:mix/mix.dart';
+import 'package:sentra_ui/sentra_ui.dart';
 import '../../../core/mixins/date_format_mixin.dart';
 import '../../../core/mixins/filterable_list_mixin.dart';
 import '../../../core/mixins/status_color_mixin.dart';
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../../routes/app_router.dart';
 import '../domain/asset.dart';
@@ -49,13 +47,11 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(localAssetsProvider);
     return Scaffold(
-      backgroundColor: kSurface,
+      backgroundColor: SentraColors.gray50,
       appBar: AppBar(
-        title: Text(
-          'Asset Inventory',
-          style: TextStyle(fontSize: 18.0.sp, fontWeight: FontWeight.w700),
-        ),
-        backgroundColor: kSurface,
+        title: Text('Asset Inventory', style: SentraTypography.h3),
+        backgroundColor: Colors.white,
+        elevation: 0,
         actions: [
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 4),
@@ -63,7 +59,10 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
           ),
           IconButton(
             tooltip: 'Refresh assets',
-            icon: const Icon(LucideIcons.refreshCw),
+            icon: const Icon(
+              LucideIcons.refreshCw,
+              color: SentraColors.primary700,
+            ),
             onPressed: () =>
                 ref.read(assetsViewModelProvider.notifier).refresh(),
           ),
@@ -72,11 +71,28 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(16.0.w, 8.0.h, 16.0.w, 4.0.h),
-            child: TextField(
+            padding: EdgeInsets.fromLTRB(16.0.w, 16.0.h, 16.0.w, 8.0.h),
+            child: TextFormField(
               onChanged: updateSearch,
-              style: TextStyle(color: kTextPrimary, fontSize: 14.0.sp),
-              decoration: sentraSearchDecoration(hint: 'Search assets...'),
+              style: SentraTypography.bodyMedium,
+              decoration: InputDecoration(
+                hintText: 'Search assets...',
+                prefixIcon: const Icon(LucideIcons.search, size: 18),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: SentraSpacing.m,
+                  vertical: SentraSpacing.s,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(SentraSpacing.xs),
+                  borderSide: const BorderSide(color: SentraColors.gray200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(SentraSpacing.xs),
+                  borderSide: const BorderSide(color: SentraColors.gray200),
+                ),
+              ),
             ),
           ),
           SizedBox(
@@ -92,7 +108,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
               ],
             ),
           ),
-          SizedBox(height: 4.0.h),
+          SizedBox(height: 8.0.h),
           Expanded(
             child: state.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -100,12 +116,13 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, color: kDanger, size: 48.0.sp),
-                    SizedBox(height: 16.0.h),
-                    Text(
-                      'Failed: $err',
-                      style: const TextStyle(color: kTextPrimary),
+                    Icon(
+                      LucideIcons.alertCircle,
+                      color: SentraColors.error,
+                      size: 48.0.sp,
                     ),
+                    SizedBox(height: 16.0.h),
+                    Text('Failed: $err', style: SentraTypography.bodyMedium),
                   ],
                 ),
               ),
@@ -118,27 +135,28 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
                       children: [
                         Icon(
                           LucideIcons.package,
-                          color: kTextMuted,
+                          color: SentraColors.gray500,
                           size: 48.0.sp,
                         ),
                         SizedBox(height: 12.0.h),
-                        StyledText(
+                        Text(
                           searchQuery.isNotEmpty || statusFilter != null
                               ? 'No matching assets'
                               : 'No assets registered',
-                          style: $emptyStateText(),
+                          style: SentraTypography.bodyLarge.copyWith(
+                            color: SentraColors.gray500,
+                          ),
                         ),
                       ],
                     ),
                   );
                 }
                 return RefreshIndicator(
-                  color: kEmerald500,
-                  backgroundColor: kSurfaceElevated,
+                  color: SentraColors.primary700,
                   onRefresh: () async =>
                       ref.read(assetsViewModelProvider.notifier).refresh(),
                   child: ListView.builder(
-                    padding: EdgeInsets.all(16.0.w),
+                    padding: EdgeInsets.symmetric(horizontal: 16.0.w),
                     itemCount: filtered.length,
                     itemBuilder: (_, i) => _buildCard(filtered[i]),
                   ),
@@ -153,17 +171,17 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
         children: [
           FloatingActionButton(
             tooltip: 'Create asset manually',
-            backgroundColor: kBrand.withValues(alpha: 0.85),
+            backgroundColor: SentraColors.primary700.withValues(alpha: 0.85),
             heroTag: 'create-asset',
-            child: const Icon(LucideIcons.plus, color: kSurface),
+            child: const Icon(LucideIcons.plus, color: Colors.white),
             onPressed: () => context.router.push(const AssetCreateRoute()),
           ),
           SizedBox(height: 12.0.h),
           FloatingActionButton(
             tooltip: 'Scan asset QR code',
-            backgroundColor: kBrand,
+            backgroundColor: SentraColors.primary700,
             heroTag: 'scan-asset',
-            child: const Icon(LucideIcons.scanQrCode, color: kSurface),
+            child: const Icon(LucideIcons.scanQrCode, color: Colors.white),
             onPressed: () => context.router.push(const AssetScannerRoute()),
           ),
         ],
@@ -173,21 +191,22 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
 
   Widget _buildChip(AssetOperationalStatus? status, String label) {
     final isActive = statusFilter == status;
-    final color = status != null ? getStatusColor(status) : kEmerald500;
     return Padding(
       padding: EdgeInsets.only(right: 8.0.w),
-      child: GestureDetector(
-        onTap: () => updateFilter(status),
-        child: Box(
-          style: isActive ? $filterChipActive(color) : $filterChip(),
-          child: Center(
-            child: StyledText(
-              label,
-              style: TextStyler()
-                  .color(isActive ? color : kTextMuted)
-                  .fontSize(11)
-                  .fontWeight(.w600),
-            ),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: isActive,
+        onSelected: (_) => updateFilter(status),
+        selectedColor: SentraColors.primary700,
+        labelStyle: SentraTypography.label.copyWith(
+          color: isActive ? Colors.white : SentraColors.gray700,
+          fontSize: 10,
+        ),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SentraSpacing.xxl),
+          side: BorderSide(
+            color: isActive ? SentraColors.primary700 : SentraColors.gray200,
           ),
         ),
       ),
@@ -195,95 +214,88 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen>
   }
 
   Widget _buildCard(Asset asset) {
-    final statusColor = getStatusColor(asset.status);
+    final badgeType = _getBadgeType(asset.status);
     final daysSince = DateTime.now().difference(asset.lastServicedDate).inDays;
     return Padding(
-      padding: EdgeInsets.only(bottom: 14.0.h),
-      child: GestureDetector(
+      padding: EdgeInsets.only(bottom: 12.0.h),
+      child: SentraCard(
         onTap: () => context.router.push(AssetDetailRoute(assetId: asset.id)),
-        child: Box(
-          style: $card().padding(.all(16)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  StyledText(
-                    asset.id,
-                    style: TextStyler()
-                        .color(kEmerald500.withValues(alpha: 0.8))
-                        .fontWeight(.w600)
-                        .fontSize(12.0.sp.toDouble()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  asset.id,
+                  style: SentraTypography.label.copyWith(
+                    color: SentraColors.primary700,
+                    fontSize: 12,
                   ),
-                  Box(
-                    style: $badge(statusColor),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          getStatusIcon(asset.status),
-                          color: statusColor,
-                          size: 12.0.sp,
-                        ),
-                        SizedBox(width: 4.0.w),
-                        StyledText(
-                          asset.status.name.toUpperCase(),
-                          style: $badgeText(statusColor),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10.0.h),
-              Text(
-                asset.name,
-                style: TextStyle(
-                  color: kTextPrimary,
-                  fontSize: 15.0.sp,
-                  fontWeight: FontWeight.w700,
                 ),
+                SentraBadge(label: asset.status.name, type: badgeType),
+              ],
+            ),
+            SizedBox(height: 12.0.h),
+            Text(asset.name, style: SentraTypography.h3.copyWith(fontSize: 16)),
+            SizedBox(height: 4.0.h),
+            Text(
+              '${asset.modelNumber}  •  ${asset.serialNumber}',
+              style: SentraTypography.bodySmall.copyWith(
+                color: SentraColors.gray500,
               ),
-              SizedBox(height: 4.0.h),
-              Text(
-                '${asset.modelNumber}  •  ${asset.serialNumber}',
-                style: TextStyle(color: kTextMuted, fontSize: 12.0.sp),
-              ),
-              SizedBox(height: 12.0.h),
-              Row(
-                children: [
-                  Icon(LucideIcons.mapPin, color: kTextMuted, size: 14.0.sp),
-                  SizedBox(width: 4.0.w),
-                  Expanded(
-                    child: Text(
-                      asset.locationCoordinates,
-                      style: TextStyle(color: kTextMuted, fontSize: 12.0.sp),
-                      overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 16.0.h),
+            Row(
+              children: [
+                const Icon(
+                  LucideIcons.mapPin,
+                  color: SentraColors.gray500,
+                  size: 14,
+                ),
+                SizedBox(width: 4.0.w),
+                Expanded(
+                  child: Text(
+                    asset.locationCoordinates,
+                    style: SentraTypography.bodySmall.copyWith(
+                      color: SentraColors.gray500,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    '${daysSince}d ago',
-                    style: TextStyle(
-                      color: healthColor(
-                        (1.0 - daysSince / 90).clamp(0.0, 1.0),
-                      ),
-                      fontSize: 11.0.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                Text(
+                  '${daysSince}d ago',
+                  style: SentraTypography.label.copyWith(
+                    color: daysSince > 90
+                        ? SentraColors.error
+                        : SentraColors.success,
+                    fontSize: 11,
                   ),
-                  SizedBox(width: 8.0.w),
-                  Icon(
-                    LucideIcons.chevronRight,
-                    color: kTextMuted.withValues(alpha: 0.5),
-                    size: 20.0.sp,
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                SizedBox(width: 4.0.w),
+                const Icon(
+                  LucideIcons.chevronRight,
+                  color: SentraColors.gray200,
+                  size: 16,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  SentraBadgeType _getBadgeType(AssetOperationalStatus status) {
+    switch (status) {
+      case AssetOperationalStatus.online:
+        return SentraBadgeType.success;
+      case AssetOperationalStatus.maintenance:
+        return SentraBadgeType.warning;
+      case AssetOperationalStatus.offline:
+        return SentraBadgeType.error;
+      case AssetOperationalStatus.decommissioned:
+        return SentraBadgeType.neutral;
+    }
   }
 }

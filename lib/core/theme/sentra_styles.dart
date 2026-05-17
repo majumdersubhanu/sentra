@@ -260,10 +260,7 @@ InputDecoration sentraFieldDecoration({
       fontWeight: FontWeight.w500,
     ),
     hintText: hint,
-    hintStyle: const TextStyle(
-      color: kTextMuted,
-      fontSize: 14,
-    ),
+    hintStyle: const TextStyle(color: kTextMuted, fontSize: 14),
     prefixIcon: prefixIcon,
     suffixIcon: suffixIcon,
     errorText: error,
@@ -305,10 +302,7 @@ InputDecoration sentraFieldDecorationCompact({
       fontWeight: FontWeight.w500,
     ),
     hintText: hint,
-    hintStyle: const TextStyle(
-      color: kTextMuted,
-      fontSize: 12,
-    ),
+    hintStyle: const TextStyle(color: kTextMuted, fontSize: 12),
     prefixIcon: prefixIcon,
     suffixIcon: suffixIcon,
     filled: true,
@@ -342,10 +336,7 @@ ButtonStyle sentraPrimaryButtonStyle() {
     elevation: 0,
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    textStyle: const TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-    ),
+    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
   );
 }
 
@@ -356,10 +347,7 @@ ButtonStyle sentraSecondaryButtonStyle() {
     side: const BorderSide(color: kBorder, width: 1),
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    textStyle: const TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-    ),
+    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
   );
 }
 
@@ -371,10 +359,7 @@ ButtonStyle sentraDangerButtonStyle() {
     elevation: 0,
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    textStyle: const TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-    ),
+    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
   );
 }
 
@@ -383,10 +368,7 @@ ButtonStyle sentraGhostButtonStyle() {
   return TextButton.styleFrom(
     foregroundColor: kBrand,
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    textStyle: const TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-    ),
+    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
   );
 }
 
@@ -398,10 +380,7 @@ ButtonStyle sentraCompactButtonStyle() {
     elevation: 0,
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-    textStyle: const TextStyle(
-      fontSize: 13,
-      fontWeight: FontWeight.w600,
-    ),
+    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
   );
 }
 
@@ -466,13 +445,7 @@ class FormSection extends StatelessWidget {
         child,
         if (error != null) ...[
           const SizedBox(height: 4),
-          Text(
-            error!,
-            style: const TextStyle(
-              color: kCritical,
-              fontSize: 12,
-            ),
-          ),
+          Text(error!, style: const TextStyle(color: kCritical, fontSize: 12)),
         ],
       ],
     );
@@ -552,8 +525,7 @@ class ListItemCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color:
-                          (statusColor ?? kInfo).withValues(alpha: 0.1),
+                      color: (statusColor ?? kInfo).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -570,11 +542,7 @@ class ListItemCard extends StatelessWidget {
             ),
             if (metadata != null && metadata!.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 8,
-                children: metadata!,
-              ),
+              Wrap(spacing: 12, runSpacing: 8, children: metadata!),
             ],
           ],
         ),
@@ -611,11 +579,9 @@ class DetailRow extends StatelessWidget {
             flex: 2,
             child: Text(
               label,
-              style: labelStyle ??
-                  const TextStyle(
-                    color: kTextSecondary,
-                    fontSize: 13,
-                  ),
+              style:
+                  labelStyle ??
+                  const TextStyle(color: kTextSecondary, fontSize: 13),
             ),
           ),
           Expanded(
@@ -630,7 +596,8 @@ class DetailRow extends StatelessWidget {
                   : null,
               child: Text(
                 value,
-                style: valueStyle ??
+                style:
+                    valueStyle ??
                     const TextStyle(
                       color: kTextPrimary,
                       fontSize: 13,

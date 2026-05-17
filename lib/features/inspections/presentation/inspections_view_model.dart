@@ -23,7 +23,7 @@ final localInspectionsProvider = StreamProvider.autoDispose<List<Inspection>>((
         Inspection(
           id: entry.id,
           templateName: entry.templateName,
-          workOrderId: entry.workOrderId,
+          workOrderId: entry.workOrderId ?? '',
           inspectorName: entry.inspectorName,
           createdAt: entry.createdAt,
           status: InspectionStatus.values.firstWhere(

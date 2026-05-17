@@ -6,6 +6,7 @@ import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/work_orders/presentation/work_orders_screen.dart';
 import '../features/work_orders/presentation/work_order_detail_screen.dart';
 import '../features/work_orders/presentation/work_order_create_screen.dart';
+import '../features/work_orders/presentation/work_orders_calendar_screen.dart';
 import '../features/inspections/presentation/inspections_screen.dart';
 import '../features/inspections/presentation/inspection_detail_screen.dart';
 import '../features/inspections/presentation/inspection_create_screen.dart';

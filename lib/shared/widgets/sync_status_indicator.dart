@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:sentra_ui/sentra_ui.dart';
 
 import 'package:sentra/core/sync/sync_providers.dart';
-import 'package:sentra/core/theme/sentra_tokens.dart';
 
 /// Compact sync status indicator for app bars.
 /// Shows pending count and connectivity state with a pulsing animation.
@@ -22,34 +22,29 @@ class SyncStatusIndicator extends ConsumerWidget {
       return const SizedBox.shrink(); // Nothing to show when fully synced
     }
 
+    final color = isOnline ? SentraColors.info : SentraColors.error;
+
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.0.w, vertical: 5.0.h),
+      padding: EdgeInsets.symmetric(horizontal: 8.0.w, vertical: 4.0.h),
       decoration: BoxDecoration(
-        color: isOnline
-            ? const Color(0xFF3B82F6).withValues(alpha: 0.15)
-            : kDanger.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20.0.r),
-        border: Border.all(
-          color: isOnline
-              ? const Color(0xFF3B82F6).withValues(alpha: 0.3)
-              : kDanger.withValues(alpha: 0.3),
-        ),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             isOnline ? LucideIcons.refreshCw : LucideIcons.wifiOff,
-            color: isOnline ? const Color(0xFF3B82F6) : kDanger,
-            size: 14.0.sp,
+            color: color,
+            size: 12.0.sp,
           ),
           SizedBox(width: 4.0.w),
           Text(
             isOnline ? '$pendingCount pending' : 'Offline',
-            style: TextStyle(
-              color: isOnline ? const Color(0xFF3B82F6) : kDanger,
-              fontSize: 11.0.sp,
-              fontWeight: FontWeight.w600,
+            style: SentraTypography.label.copyWith(
+              color: color,
+              fontSize: 10.0.sp,
             ),
           ),
         ],

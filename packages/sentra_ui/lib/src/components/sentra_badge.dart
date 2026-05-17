@@ -19,21 +19,21 @@ class SentraBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _getColor();
-    final bgColor = color.withOpacity(0.1);
+    final bgColor = color.withValues(alpha: 0.1);
 
-    final style = Style(
-      text.style(SentraTypography.label.copyWith(fontSize: 10)),
-      text.color(color),
-      container.color(bgColor),
-      container.padding.symmetric(
-        horizontal: SentraSpacing.s,
-        vertical: SentraSpacing.xxs,
+    final style = BoxStyler()
+        .color(bgColor)
+        .paddingOnly(horizontal: SentraSpacing.s, vertical: SentraSpacing.xxs)
+        .borderRadiusAll(const Radius.circular(SentraSpacing.xxl))
+        .borderAll(color: color.withValues(alpha: 0.2), width: 1);
+
+    return Box(
+      style: style,
+      child: Text(
+        label.toUpperCase(),
+        style: SentraTypography.label.copyWith(fontSize: 10, color: color),
       ),
-      container.borderRadius(SentraSpacing.xxl),
-      container.border.all(color: color.withOpacity(0.2), width: 1),
     );
-
-    return Box(style: style, child: StyledText(label.toUpperCase()));
   }
 
   Color _getColor() {

@@ -27,9 +27,7 @@ class SentraDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
           color: kSurface,
@@ -167,10 +165,7 @@ class _SentraDropdownState<T> extends State<SentraDropdown<T>> {
           child: DropdownButton<T>(
             value: widget.value,
             hint: widget.hint != null
-                ? Text(
-                    widget.hint!,
-                    style: const TextStyle(color: kTextMuted),
-                  )
+                ? Text(widget.hint!, style: const TextStyle(color: kTextMuted))
                 : null,
             items: widget.items,
             onChanged: widget.onChanged,
@@ -184,10 +179,7 @@ class _SentraDropdownState<T> extends State<SentraDropdown<T>> {
           const SizedBox(height: 4),
           Text(
             widget.error!,
-            style: const TextStyle(
-              color: kCritical,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: kCritical, fontSize: 12),
           ),
         ],
       ],
@@ -267,10 +259,7 @@ class _SentraTabBarState extends State<SentraTabBar> {
             ),
           ),
         ),
-        Container(
-          height: 1,
-          color: kBorderMuted,
-        ),
+        Container(height: 1, color: kBorderMuted),
       ],
     );
   }
@@ -388,8 +377,7 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         spacing: 8,
         children: [
-          if (icon != null)
-            Icon(icon, color: kBrand, size: 20),
+          if (icon != null) Icon(icon, color: kBrand, size: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,10 +394,7 @@ class SectionHeader extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
-                    style: const TextStyle(
-                      color: kTextSecondary,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: kTextSecondary, fontSize: 12),
                   ),
                 ],
               ],
@@ -457,16 +442,10 @@ class EmptyState extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: const TextStyle(
-              color: kTextSecondary,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: kTextSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
-          if (action != null) ...[
-            const SizedBox(height: 24),
-            action!,
-          ],
+          if (action != null) ...[const SizedBox(height: 24), action!],
         ],
       ),
     );
@@ -526,17 +505,11 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
             stops: const [0.1, 0.5, 0.9],
-            colors: [
-              kBody,
-              kBorderMuted,
-              kBody,
-            ],
+            colors: [kBody, kBorderMuted, kBody],
             tileMode: TileMode.clamp,
           ).createShader(Offset.zero & bounds.size);
         },
-        child: Container(
-          color: kBody,
-        ),
+        child: Container(color: kBody),
       ),
     );
   }
@@ -560,10 +533,7 @@ class SentraDivider extends StatelessWidget {
     if (label == null) {
       return Padding(
         padding: padding,
-        child: Divider(
-          color: kBorderMuted,
-          height: 1,
-        ),
+        child: Divider(color: kBorderMuted, height: 1),
       );
     }
 
@@ -623,15 +593,11 @@ class InfoBox extends StatelessWidget {
       child: Row(
         spacing: 12,
         children: [
-          if (icon != null)
-            Icon(icon, color: textColor, size: 20),
+          if (icon != null) Icon(icon, color: textColor, size: 20),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: textColor, fontSize: 13),
             ),
           ),
           if (onDismiss != null)

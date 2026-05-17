@@ -1,14 +1,11 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:jiffy/jiffy.dart';
-import 'package:mix/mix.dart';
+import 'package:sentra_ui/sentra_ui.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/storage/database.dart';
 import '../../../core/storage/database_providers.dart';
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
 import 'package:sentra/routes/app_router.dart';
 
 @RoutePage()
@@ -20,15 +17,7 @@ class ConflictListScreen extends ConsumerWidget {
     final conflictsAsync = ref.watch(unresolvedConflictsProvider);
 
     return Scaffold(
-      backgroundColor: kSurface,
-      appBar: AppBar(
-        title: Text(
-          'Data Conflicts',
-          style: TextStyle(fontSize: 18.0.sp, fontWeight: FontWeight.w700),
-        ),
-        backgroundColor: kSurface,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: Text('Data Conflicts', style: SentraTypography.h3)),
       body: conflictsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
@@ -39,24 +28,16 @@ class ConflictListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.check_circle_outline,
-                    color: kSuccess,
-                    size: 48.0.sp,
+                  const Icon(
+                    LucideIcons.checkCircle,
+                    color: SentraColors.success,
+                    size: 48,
                   ),
-                  SizedBox(height: 16.0.h),
+                  const SizedBox(height: SentraSpacing.m),
+                  Text('No pending conflicts', style: SentraTypography.h3),
                   Text(
-                    'No pending conflicts',
-                    style: TextStyle(
-                      color: kTextPrimary,
-                      fontSize: 16.0.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 8.0.h),
-                  Text(
-                    'All local data is in sync with the server.',
-                    style: TextStyle(color: kTextMuted, fontSize: 14.0.sp),
+                    'All local data is in sync.',
+                    style: SentraTypography.bodySmall,
                   ),
                 ],
               ),
@@ -64,67 +45,58 @@ class ConflictListScreen extends ConsumerWidget {
           }
 
           return ListView.builder(
-            padding: EdgeInsets.all(16.0.w),
+            padding: const EdgeInsets.all(SentraSpacing.m),
             itemCount: conflicts.length,
             itemBuilder: (context, index) {
               final conflict = conflicts[index];
-              return _ConflictCard(conflict: conflict);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: SentraSpacing.m),
+                child: SentraCard(
+                  onTap: () => context.router.push(
+                    ConflictResolutionRoute(conflict: conflict),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: SentraColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          LucideIcons.refreshCcw,
+                          color: SentraColors.error,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: SentraSpacing.m),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${conflict.entityType.toUpperCase()}: ${conflict.id}',
+                              style: SentraTypography.label,
+                            ),
+                            Text(
+                              'Conflict by ${conflict.conflictingUserName ?? "Unknown"}',
+                              style: SentraTypography.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        LucideIcons.chevronRight,
+                        size: 16,
+                        color: SentraColors.gray500,
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
           );
         },
-      ),
-    );
-  }
-}
-
-class _ConflictCard extends StatelessWidget {
-  final ConflictEntry conflict;
-  const _ConflictCard({required this.conflict});
-
-  @override
-  Widget build(BuildContext context) {
-    return PressableBox(
-      onPress: () =>
-          context.router.push(ConflictResolutionRoute(conflict: conflict)),
-      style: $sectionCard().marginOnly(bottom: 12.0.h).paddingAll(16.0.w),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(10.0.w),
-            decoration: BoxDecoration(
-              color: kDanger.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10.0.r),
-            ),
-            child: Icon(Icons.sync_problem, color: kDanger, size: 20.0.sp),
-          ),
-          SizedBox(width: 16.0.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${conflict.entityType.toUpperCase()}: ${conflict.id}',
-                  style: TextStyle(
-                    color: kTextPrimary,
-                    fontSize: 14.0.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: 4.0.h),
-                Text(
-                  'Conflicting change by ${conflict.conflictingUserName ?? "Unknown User"}',
-                  style: TextStyle(color: kTextSecondary, fontSize: 12.0.sp),
-                ),
-                SizedBox(height: 4.0.h),
-                Text(
-                  'Detected ${Jiffy.parseFromDateTime(conflict.createdAt).fromNow()}',
-                  style: TextStyle(color: kTextMuted, fontSize: 11.0.sp),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.chevron_right, color: kTextMuted, size: 20.0.sp),
-        ],
       ),
     );
   }

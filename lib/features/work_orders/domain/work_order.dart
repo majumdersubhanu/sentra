@@ -1,4 +1,3 @@
-import 'package:fpdart/fpdart.dart';
 
 /// Full work order lifecycle statuses per spec.
 enum WorkOrderStatus {

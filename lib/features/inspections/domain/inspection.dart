@@ -1,13 +1,14 @@
-enum InspectionStatus { draft, submitted, flagged, approved }
+
+enum InspectionStatus { draft, inProgress, completed }
 
 class InspectionItem {
   final String id;
   final String question;
-  final bool isPass;
+  bool isPass;
   final String? comments;
   final int sortOrder;
 
-  const InspectionItem({
+  InspectionItem({
     required this.id,
     required this.question,
     required this.isPass,
@@ -40,7 +41,7 @@ class Inspection {
   final DateTime createdAt;
   final InspectionStatus status;
   final List<InspectionItem> items;
-  final String? submittedBy; // UUID
+  final String? submittedBy;
   final String? organizationId;
 
   const Inspection({

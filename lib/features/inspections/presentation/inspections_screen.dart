@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:mix/mix.dart';
+import 'package:sentra_ui/sentra_ui.dart';
 import '../../../core/mixins/date_format_mixin.dart';
 import '../../../core/mixins/filterable_list_mixin.dart';
 import '../../../core/mixins/status_color_mixin.dart';
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../../routes/app_router.dart';
 import '../domain/inspection.dart';
@@ -48,13 +46,11 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(localInspectionsProvider);
     return Scaffold(
-      backgroundColor: kSurface,
+      backgroundColor: SentraColors.gray50,
       appBar: AppBar(
-        title: Text(
-          'Inspections',
-          style: TextStyle(fontSize: 18.0.sp, fontWeight: FontWeight.w700),
-        ),
-        backgroundColor: kSurface,
+        title: Text('Inspections', style: SentraTypography.h3),
+        backgroundColor: Colors.white,
+        elevation: 0,
         actions: [
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 4),
@@ -62,7 +58,10 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen>
           ),
           IconButton(
             tooltip: 'Refresh inspections',
-            icon: const Icon(LucideIcons.refreshCw),
+            icon: const Icon(
+              LucideIcons.refreshCw,
+              color: SentraColors.primary700,
+            ),
             onPressed: () =>
                 ref.read(inspectionsViewModelProvider.notifier).refresh(),
           ),
@@ -70,18 +69,35 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen>
       ),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Create inspection',
-        backgroundColor: kWarning,
+        backgroundColor: SentraColors.primary700,
         onPressed: () => context.router.push(const InspectionCreateRoute()),
         child: const Icon(LucideIcons.plus, color: Colors.white),
       ),
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(16.0.w, 8.0.h, 16.0.w, 4.0.h),
-            child: TextField(
+            padding: EdgeInsets.fromLTRB(16.0.w, 16.0.h, 16.0.w, 8.0.h),
+            child: TextFormField(
               onChanged: updateSearch,
-              style: TextStyle(color: kTextPrimary, fontSize: 14.0.sp),
-              decoration: sentraSearchDecoration(hint: 'Search inspections...'),
+              style: SentraTypography.bodyMedium,
+              decoration: InputDecoration(
+                hintText: 'Search inspections...',
+                prefixIcon: const Icon(LucideIcons.search, size: 18),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: SentraSpacing.m,
+                  vertical: SentraSpacing.s,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(SentraSpacing.xs),
+                  borderSide: const BorderSide(color: SentraColors.gray200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(SentraSpacing.xs),
+                  borderSide: const BorderSide(color: SentraColors.gray200),
+                ),
+              ),
             ),
           ),
           SizedBox(
@@ -97,7 +113,7 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen>
               ],
             ),
           ),
-          SizedBox(height: 4.0.h),
+          SizedBox(height: 8.0.h),
           Expanded(
             child: state.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -105,12 +121,13 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, color: kDanger, size: 48.0.sp),
-                    SizedBox(height: 16.0.h),
-                    Text(
-                      'Failed: $err',
-                      style: const TextStyle(color: kTextPrimary),
+                    Icon(
+                      LucideIcons.alertCircle,
+                      color: SentraColors.error,
+                      size: 48.0.sp,
                     ),
+                    SizedBox(height: 16.0.h),
+                    Text('Failed: $err', style: SentraTypography.bodyMedium),
                   ],
                 ),
               ),
@@ -123,27 +140,28 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen>
                       children: [
                         Icon(
                           LucideIcons.clipboardCheck,
-                          color: kTextMuted,
+                          color: SentraColors.gray500,
                           size: 48.0.sp,
                         ),
                         SizedBox(height: 12.0.h),
-                        StyledText(
+                        Text(
                           searchQuery.isNotEmpty || statusFilter != null
                               ? 'No matching inspections'
                               : 'No inspections recorded',
-                          style: $emptyStateText(),
+                          style: SentraTypography.bodyLarge.copyWith(
+                            color: SentraColors.gray500,
+                          ),
                         ),
                       ],
                     ),
                   );
                 }
                 return RefreshIndicator(
-                  color: kWarning,
-                  backgroundColor: kSurfaceElevated,
+                  color: SentraColors.primary700,
                   onRefresh: () async =>
                       ref.read(inspectionsViewModelProvider.notifier).refresh(),
                   child: ListView.builder(
-                    padding: EdgeInsets.all(16.0.w),
+                    padding: EdgeInsets.symmetric(horizontal: 16.0.w),
                     itemCount: filtered.length,
                     itemBuilder: (_, i) => _buildCard(filtered[i]),
                   ),
@@ -158,21 +176,22 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen>
 
   Widget _buildChip(InspectionStatus? status, String label) {
     final isActive = statusFilter == status;
-    final color = status != null ? getStatusColor(status) : kWarning;
     return Padding(
       padding: EdgeInsets.only(right: 8.0.w),
-      child: GestureDetector(
-        onTap: () => updateFilter(status),
-        child: Box(
-          style: isActive ? $filterChipActive(color) : $filterChip(),
-          child: Center(
-            child: StyledText(
-              label,
-              style: TextStyler()
-                  .color(isActive ? color : kTextMuted)
-                  .fontSize(11)
-                  .fontWeight(.w600),
-            ),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: isActive,
+        onSelected: (_) => updateFilter(status),
+        selectedColor: SentraColors.primary700,
+        labelStyle: SentraTypography.label.copyWith(
+          color: isActive ? Colors.white : SentraColors.gray700,
+          fontSize: 10,
+        ),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SentraSpacing.xxl),
+          side: BorderSide(
+            color: isActive ? SentraColors.primary700 : SentraColors.gray200,
           ),
         ),
       ),
@@ -180,89 +199,87 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen>
   }
 
   Widget _buildCard(Inspection insp) {
-    final statusColor = getStatusColor(insp.status);
+    final badgeType = _getBadgeType(insp.status);
     final passed = insp.items.where((i) => i.isPass).length;
     final total = insp.items.length;
     return Padding(
-      padding: EdgeInsets.only(bottom: 14.0.h),
-      child: GestureDetector(
+      padding: EdgeInsets.only(bottom: 12.0.h),
+      child: SentraCard(
         onTap: () =>
             context.router.push(InspectionDetailRoute(inspectionId: insp.id)),
-        child: Box(
-          style: $card().padding(.all(16)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  StyledText(
-                    insp.id,
-                    style: TextStyler()
-                        .color(kWarning.withValues(alpha: 0.8))
-                        .fontWeight(.w600)
-                        .fontSize(12.0.sp.toDouble()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  insp.id,
+                  style: SentraTypography.label.copyWith(
+                    color: SentraColors.primary700,
+                    fontSize: 12,
                   ),
-                  Box(
-                    style: $badge(statusColor),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          getStatusIcon(insp.status),
-                          color: statusColor,
-                          size: 10.0.sp,
-                        ),
-                        SizedBox(width: 3.0.w),
-                        StyledText(
-                          insp.status.name.toUpperCase(),
-                          style: $badgeText(statusColor),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10.0.h),
-              Text(
-                insp.workOrderId,
-                style: TextStyle(
-                  color: kTextPrimary,
-                  fontSize: 15.0.sp,
-                  fontWeight: FontWeight.w700,
                 ),
+                SentraBadge(label: insp.status.name, type: badgeType),
+              ],
+            ),
+            SizedBox(height: 12.0.h),
+            Text(
+              insp.workOrderId,
+              style: SentraTypography.h3.copyWith(fontSize: 16),
+            ),
+            SizedBox(height: 4.0.h),
+            Text(
+              insp.inspectorName,
+              style: SentraTypography.bodySmall.copyWith(
+                color: SentraColors.gray500,
               ),
-              SizedBox(height: 4.0.h),
-              Text(
-                insp.inspectorName,
-                style: TextStyle(color: kTextMuted, fontSize: 12.0.sp),
-              ),
-              SizedBox(height: 12.0.h),
-              Row(
-                children: [
-                  Icon(LucideIcons.circleCheck, color: kSuccess, size: 13.0.sp),
-                  SizedBox(width: 4.0.w),
-                  Text(
-                    '$passed/$total passed',
-                    style: TextStyle(color: kTextSecondary, fontSize: 11.0.sp),
+            ),
+            SizedBox(height: 16.0.h),
+            Row(
+              children: [
+                const Icon(
+                  LucideIcons.checkCircle2,
+                  color: SentraColors.success,
+                  size: 14,
+                ),
+                SizedBox(width: 4.0.w),
+                Text(
+                  '$passed/$total passed',
+                  style: SentraTypography.bodySmall.copyWith(
+                    color: SentraColors.gray700,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const Spacer(),
-                  Text(
-                    formatDate(insp.createdAt),
-                    style: TextStyle(color: kTextMuted, fontSize: 11.0.sp),
+                ),
+                const Spacer(),
+                Text(
+                  formatDate(insp.createdAt),
+                  style: SentraTypography.bodySmall.copyWith(
+                    color: SentraColors.gray500,
                   ),
-                  SizedBox(width: 8.0.w),
-                  Icon(
-                    LucideIcons.chevronRight,
-                    color: kTextMuted.withValues(alpha: 0.5),
-                    size: 20.0.sp,
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                SizedBox(width: 4.0.w),
+                const Icon(
+                  LucideIcons.chevronRight,
+                  color: SentraColors.gray200,
+                  size: 16,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  SentraBadgeType _getBadgeType(InspectionStatus status) {
+    switch (status) {
+      case InspectionStatus.completed:
+        return SentraBadgeType.success;
+      case InspectionStatus.inProgress:
+        return SentraBadgeType.info;
+      case InspectionStatus.draft:
+        return SentraBadgeType.neutral;
+    }
   }
 }

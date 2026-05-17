@@ -10,6 +10,7 @@ class SentraTextField extends StatelessWidget {
   final bool isPassword;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
 
   const SentraTextField({
     super.key,
@@ -19,6 +20,7 @@ class SentraTextField extends StatelessWidget {
     this.isPassword = false,
     this.keyboardType,
     this.validator,
+    this.onChanged,
   });
 
   @override
@@ -36,6 +38,7 @@ class SentraTextField extends StatelessWidget {
           obscureText: isPassword,
           keyboardType: keyboardType,
           validator: validator,
+          onChanged: onChanged,
           style: SentraTypography.bodyMedium,
           decoration: InputDecoration(
             hintText: hintText,

@@ -19,6 +19,16 @@ class _WorkOrdersScreenState extends ConsumerState<WorkOrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      ref
+          .read(workOrdersViewModelProvider.notifier)
+          .search(_searchController.text);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(workOrdersViewModelProvider);
 
@@ -72,7 +82,8 @@ class _WorkOrdersScreenState extends ConsumerState<WorkOrdersScreen> {
         return Padding(
           padding: const EdgeInsets.only(bottom: SentraSpacing.m),
           child: SentraCard(
-            onTap: () => context.router.push(WorkOrderDetailRoute(id: wo.id)),
+            onTap: () =>
+                context.router.push(WorkOrderDetailRoute(workOrderId: wo.id)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

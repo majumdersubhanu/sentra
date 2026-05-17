@@ -23,8 +23,9 @@ class AssetDao extends DatabaseAccessor<SentraDatabase> with _$AssetDaoMixin {
       (select(assetEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   /// Get assets by status.
-  Future<List<AssetEntry>> getByStatus(String status) =>
-      (select(assetEntries)..where((t) => t.status.equals(status))).get();
+  Future<List<AssetEntry>> getByStatus(String status) => (select(
+    assetEntries,
+  )..where((t) => t.operationalStatus.equals(status))).get();
 
   /// Get assets with pending sync.
   Future<List<AssetEntry>> getPendingSync() => (select(

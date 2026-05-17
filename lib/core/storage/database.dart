@@ -6,6 +6,7 @@ import 'daos/sync_queue_dao.dart';
 import 'daos/work_order_dao.dart';
 import 'daos/conflict_dao.dart';
 import 'daos/user_dao.dart';
+import 'daos/notification_dao.dart';
 import 'db_connection.dart';
 import 'tables.dart';
 
@@ -22,6 +23,8 @@ part 'database.g.dart';
     SyncQueueEntries,
     ConflictEntries,
     UserEntries,
+    NotificationEntries,
+    WorkOrderMaterialEntries,
   ],
   daos: [
     WorkOrderDao,
@@ -30,6 +33,7 @@ part 'database.g.dart';
     SyncQueueDao,
     ConflictDao,
     UserDao,
+    NotificationDao,
   ],
 )
 class SentraDatabase extends _$SentraDatabase {
@@ -46,7 +50,6 @@ class SentraDatabase extends _$SentraDatabase {
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
       // Future schema migrations go here.
-      // Example: if (from < 2) await m.addColumn(workOrderEntries, workOrderEntries.someNewColumn);
     },
   );
 
@@ -64,6 +67,8 @@ class SentraDatabase extends _$SentraDatabase {
   ConflictDao get conflictDao => ConflictDao(this);
   @override
   UserDao get userDao => UserDao(this);
+  @override
+  NotificationDao get notificationDao => NotificationDao(this);
 
   // ─── Utility ──────────────────────────────────────────────────────────────
 
@@ -77,6 +82,8 @@ class SentraDatabase extends _$SentraDatabase {
       await delete(inspectionEntries).go();
       await delete(assetEntries).go();
       await delete(workOrderEntries).go();
+      await delete(notificationEntries).go();
+      await delete(workOrderMaterialEntries).go();
     });
   }
 }

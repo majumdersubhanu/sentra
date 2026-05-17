@@ -87,7 +87,11 @@ class RealtimeService {
         description: Value(json['description'] as String? ?? ''),
         status: Value(json['status'] as String),
         priority: Value(json['priority'] as String),
-        scheduledDate: Value(DateTime.parse(json['scheduled_date'] as String)),
+        scheduledDate: Value(
+          json['scheduled_date'] != null
+              ? DateTime.parse(json['scheduled_date'] as String)
+              : null,
+        ),
         createdAt: Value(DateTime.parse(json['created_at'] as String)),
         assetId: Value(json['asset_id'] as String?),
         assignedTo: Value(json['assigned_to'] as String?),
@@ -141,7 +145,7 @@ class RealtimeService {
         locationCoordinates: Value(
           json['location_coordinates'] as String? ?? '',
         ),
-        status: Value(json['status'] as String),
+        operationalStatus: Value(json['operational_status'] as String),
         lastMaintenanceDate: Value(
           json['last_maintenance_date'] != null
               ? DateTime.parse(json['last_maintenance_date'] as String)

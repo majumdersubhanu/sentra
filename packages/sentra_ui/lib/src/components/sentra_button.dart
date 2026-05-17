@@ -20,36 +20,29 @@ class SentraButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Style(
-      text.style(SentraTypography.label),
-      text.color(isPrimary ? Colors.white : SentraColors.primary700),
-      container.color(isPrimary ? SentraColors.primary700 : Colors.white),
-      container.padding.symmetric(
-        horizontal: SentraSpacing.m,
-        vertical: SentraSpacing.s,
-      ),
-      container.border.all(
-        color: isPrimary ? Colors.transparent : SentraColors.primary700,
-        width: 1,
-      ),
-      container.borderRadius(SentraSpacing.xs),
-      // Hover/Press states
-      onHover(
-        container.color(
-          isPrimary ? SentraColors.primary900 : SentraColors.primary50,
-        ),
-      ),
-      onPress(container.scale(0.98)),
-    );
+    final style = BoxStyler()
+        .color(isPrimary ? SentraColors.primary700 : Colors.white)
+        .paddingOnly(horizontal: SentraSpacing.m, vertical: SentraSpacing.s)
+        .borderAll(
+          color: isPrimary ? Colors.transparent : SentraColors.primary700,
+          width: 1,
+        )
+        .borderRadiusAll(const Radius.circular(SentraSpacing.xs));
 
     return PressableBox(
       onPress: onPressed,
       style: style,
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (icon != null) ...[icon!, const SizedBox(width: SentraSpacing.xs)],
-          StyledText(label),
+          Text(
+            label,
+            style: SentraTypography.label.copyWith(
+              color: isPrimary ? Colors.white : SentraColors.primary700,
+            ),
+          ),
         ],
       ),
     );

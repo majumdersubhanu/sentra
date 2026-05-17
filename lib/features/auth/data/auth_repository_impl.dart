@@ -99,8 +99,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final client = _supabaseClient;
-      if (client == null)
+      if (client == null) {
         return const Left(AuthFailure('Supabase client not initialized.'));
+      }
 
       final response = await client.auth.signUp(
         email: email,
@@ -153,8 +154,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final client = _supabaseClient;
-      if (client == null)
+      if (client == null) {
         return const Left(AuthFailure('Supabase client not initialized.'));
+      }
 
       final response = await client.auth.signInWithPassword(
         email: email,
@@ -180,8 +182,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final client = _supabaseClient;
-      if (client == null)
+      if (client == null) {
         return const Left(AuthFailure('Supabase client not initialized.'));
+      }
 
       await client.auth.signOut();
       _cachedProfile = null;

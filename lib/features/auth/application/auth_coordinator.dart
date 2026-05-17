@@ -18,6 +18,20 @@ class AuthCoordinator {
     return _authRepository.signInWithEmailAndPassword(email, password);
   }
 
+  Future<Either<Failure, Unit>> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+    String? organizationName,
+  }) {
+    return _authRepository.signUp(
+      email: email,
+      password: password,
+      fullName: fullName,
+      organizationName: organizationName,
+    );
+  }
+
   Future<Either<Failure, Unit>> signOut() {
     return _authRepository.signOut();
   }

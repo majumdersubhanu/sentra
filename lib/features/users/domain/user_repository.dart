@@ -7,4 +7,9 @@ abstract interface class UserRepository {
   Future<Either<Failure, List<UserProfile>>> getAllUsers();
   Future<Either<Failure, UserProfile>> getUserById(String id);
   Future<Either<Failure, Unit>> updateUserRole(String id, UserRole role);
+  Future<Either<Failure, Unit>> inviteUser({
+    required String email,
+    required String fullName,
+    required UserRole role,
+  });
 }

@@ -15,7 +15,7 @@ class InspectionCoordinator {
   }
 
   Future<Either<Failure, Unit>> submitInspection(Inspection inspection) {
-    final submitted = inspection.copyWith(status: InspectionStatus.submitted);
+    final submitted = inspection.copyWith(status: InspectionStatus.completed);
     return _repository.saveInspection(submitted);
   }
 }
