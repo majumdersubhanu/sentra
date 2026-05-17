@@ -127,9 +127,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: SentraButton(
-                    label: _isLoading
-                        ? 'Processing...'
-                        : (_isLogin ? 'Sign In' : 'Create Account'),
+                    label: _isLogin ? 'Sign In' : 'Create Account',
+                    isLoading: _isLoading,
                     onPressed: _isLoading ? null : _submit,
                   ),
                 ),

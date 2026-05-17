@@ -43,7 +43,7 @@ dependencies:
   fpdart: any
   posthog_flutter: any
   sentry_flutter: any
-  logger: any
+  logger: ^2.7.0
   flutter_dotenv: any
   mix: any
   remix: any

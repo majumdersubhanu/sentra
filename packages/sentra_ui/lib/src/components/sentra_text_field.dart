@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../tokens/sentra_colors.dart';
 import '../tokens/sentra_spacing.dart';
 import '../tokens/sentra_typography.dart';
 
-class SentraTextField extends StatelessWidget {
+class SentraTextField extends StatefulWidget {
   final String label;
   final String? hintText;
   final TextEditingController? controller;
@@ -24,24 +25,37 @@ class SentraTextField extends StatelessWidget {
   });
 
   @override
+  State<SentraTextField> createState() => _SentraTextFieldState();
+}
+
+class _SentraTextFieldState extends State<SentraTextField> {
+  late bool _obscureText;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscureText = widget.isPassword;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: SentraTypography.label.copyWith(color: SentraColors.gray700),
         ),
         const SizedBox(height: SentraSpacing.xs),
         TextFormField(
-          controller: controller,
-          obscureText: isPassword,
-          keyboardType: keyboardType,
-          validator: validator,
-          onChanged: onChanged,
+          controller: widget.controller,
+          obscureText: _obscureText,
+          keyboardType: widget.keyboardType,
+          validator: widget.validator,
+          onChanged: widget.onChanged,
           style: SentraTypography.bodyMedium,
           decoration: InputDecoration(
-            hintText: hintText,
+            hintText: widget.hintText,
             hintStyle: SentraTypography.bodyMedium.copyWith(
               color: SentraColors.gray500,
             ),
@@ -51,6 +65,20 @@ class SentraTextField extends StatelessWidget {
               horizontal: SentraSpacing.m,
               vertical: SentraSpacing.s,
             ),
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _obscureText ? LucideIcons.eye : LucideIcons.eyeOff,
+                      color: SentraColors.gray500,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                  )
+                : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(SentraSpacing.xs),
               borderSide: const BorderSide(color: SentraColors.gray200),

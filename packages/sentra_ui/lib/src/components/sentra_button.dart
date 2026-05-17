@@ -9,6 +9,7 @@ class SentraButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isPrimary;
   final Widget? icon;
+  final bool isLoading;
 
   const SentraButton({
     super.key,
@@ -16,6 +17,7 @@ class SentraButton extends StatelessWidget {
     this.onPressed,
     this.isPrimary = true,
     this.icon,
+    this.isLoading = false,
   });
 
   @override
@@ -30,19 +32,33 @@ class SentraButton extends StatelessWidget {
         .borderRadiusAll(const Radius.circular(SentraSpacing.xs));
 
     return PressableBox(
-      onPress: onPressed,
+      onPress: isLoading ? null : onPressed,
       style: style,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (icon != null) ...[icon!, const SizedBox(width: SentraSpacing.xs)],
-          Text(
-            label,
-            style: SentraTypography.label.copyWith(
-              color: isPrimary ? Colors.white : SentraColors.primary700,
+          if (isLoading)
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: isPrimary ? Colors.white : SentraColors.primary700,
+              ),
+            )
+          else ...[
+            if (icon != null) ...[
+              icon!,
+              const SizedBox(width: SentraSpacing.xs),
+            ],
+            Text(
+              label,
+              style: SentraTypography.label.copyWith(
+                color: isPrimary ? Colors.white : SentraColors.primary700,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
