@@ -29,4 +29,14 @@ class WorkOrderCoordinator {
     final updated = workOrder.copyWith(status: newStatus);
     return _repository.updateWorkOrder(updated);
   }
+
+  Future<Either<Failure, List<WorkOrder>>> searchWorkOrders(String query) {
+    return _repository.searchWorkOrders(query);
+  }
+
+  Future<Either<Failure, List<WorkOrderMaterial>>> fetchWorkOrderMaterials(
+    String workOrderId,
+  ) {
+    return _repository.getWorkOrderMaterials(workOrderId);
+  }
 }

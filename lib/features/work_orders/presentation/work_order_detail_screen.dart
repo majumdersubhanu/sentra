@@ -1,24 +1,21 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:mix/mix.dart';
-import '../../../core/mixins/date_format_mixin.dart';
-import '../../../core/mixins/status_color_mixin.dart';
-import '../../../core/theme/sentra_styles.dart';
-import '../../../core/theme/sentra_tokens.dart';
+import 'package:sentra_ui/sentra_ui.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../domain/work_order.dart';
 import 'widgets/work_order_comments_section.dart';
 import 'work_orders_view_model.dart';
+import '../application/work_order_pdf_service.dart';
 import '../../uploads/presentation/widgets/attachment_picker.dart';
 import '../../uploads/presentation/widgets/attachment_gallery.dart';
 import '../../uploads/presentation/attachments_provider.dart';
 
 @RoutePage()
-class WorkOrderDetailScreen extends ConsumerWidget
-    with StatusColorMixin, DateFormatMixin {
+class WorkOrderDetailScreen extends ConsumerWidget {
   final String workOrderId;
-  WorkOrderDetailScreen({
+
+  const WorkOrderDetailScreen({
     super.key,
     @PathParam('id') required this.workOrderId,
   });
@@ -26,339 +23,317 @@ class WorkOrderDetailScreen extends ConsumerWidget
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(workOrderByIdProvider(workOrderId));
-    return state.when(
-      loading: () => const Scaffold(
-        backgroundColor: kSurface,
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (err, _) => Scaffold(
-        backgroundColor: kSurface,
-        appBar: AppBar(backgroundColor: kSurface),
-        body: Center(
-          child: Text(
-            'Error: $err',
-            style: const TextStyle(color: kTextPrimary),
-          ),
-        ),
-      ),
-      data: (wo) {
-        if (wo == null) {
-          return Scaffold(
-            backgroundColor: kSurface,
-            appBar: AppBar(
-              backgroundColor: kSurface,
-              actions: [
-                IconButton(
-                  tooltip: 'Retry',
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () {
-                    ref.invalidate(workOrderByIdProvider(workOrderId));
-                    ref.read(workOrdersViewModelProvider.notifier).refresh();
-                  },
-                ),
-              ],
-            ),
-            body: Center(
-              child: Padding(
-                padding: EdgeInsets.all(20.0.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.search_off, color: kTextMuted, size: 42.0.sp),
-                    SizedBox(height: 10.0.h),
-                    Text(
-                      'Work order not found',
-                      style: TextStyle(
-                        color: kTextPrimary,
-                        fontSize: 15.0.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 6.0.h),
-                    Text(
-                      'The record may still be syncing or may no longer exist.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: kTextMuted, fontSize: 12.0.sp),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
 
-        final statusColor = getStatusColor(wo.status);
-        final priorityColor = getStatusColor(wo.priority);
+    return state.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, _) => Scaffold(body: Center(child: Text('Error: $err'))),
+      data: (wo) {
+        if (wo == null)
+          return const Scaffold(body: Center(child: Text('Not found')));
 
         return Scaffold(
-          backgroundColor: kSurface,
           appBar: AppBar(
-            backgroundColor: kSurface,
-            title: Text(
-              wo.id,
-              style: TextStyle(fontSize: 18.0.sp, fontWeight: FontWeight.w700),
-            ),
+            title: Text(wo.id, style: SentraTypography.h3),
             actions: [
-              PopupMenuButton<WorkOrderStatus>(
-                icon: const Icon(Icons.more_vert),
-                color: kSurfaceElevated,
-                onSelected: (s) => ref
-                    .read(workOrdersViewModelProvider.notifier)
-                    .updateStatus(wo, s),
-                itemBuilder: (_) => WorkOrderStatus.values
-                    .where((s) => s != wo.status)
-                    .map(
-                      (s) => PopupMenuItem(
-                        value: s,
-                        child: Row(
-                          children: [
-                            Icon(
-                              getStatusIcon(s),
-                              color: getStatusColor(s),
-                              size: 16,
-                            ),
-                            SizedBox(width: 8.0.w),
-                            Text(
-                              s.name.toUpperCase(),
-                              style: TextStyle(
-                                color: kTextPrimary,
-                                fontSize: 12.0.sp,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                    .toList(),
+              IconButton(
+                icon: const Icon(LucideIcons.fileDown),
+                onPressed: () => WorkOrderPdfService.generateAndPrint(wo),
+              ),
+              IconButton(
+                icon: const Icon(LucideIcons.refreshCw),
+                onPressed: () =>
+                    ref.invalidate(workOrderByIdProvider(workOrderId)),
               ),
             ],
           ),
           body: SingleChildScrollView(
-            padding: EdgeInsets.all(20.0.w),
+            padding: const EdgeInsets.all(SentraSpacing.m),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 1. Header Card
+                _buildHeaderCard(wo),
+                const SizedBox(height: SentraSpacing.m),
+
+                // 2. Info Grid
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Box(
-                      style: $badge(statusColor),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            getStatusIcon(wo.status),
-                            color: statusColor,
-                            size: 14.0.sp,
-                          ),
-                          SizedBox(width: 4.0.w),
-                          StyledText(
-                            wo.status.name.toUpperCase(),
-                            style: $badgeText(statusColor).fontSize(11),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 8.0.w),
-                    Box(
-                      style: $badge(priorityColor),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            getStatusIcon(wo.priority),
-                            color: priorityColor,
-                            size: 14.0.sp,
-                          ),
-                          SizedBox(width: 4.0.w),
-                          StyledText(
-                            wo.priority.name.toUpperCase(),
-                            style: $badgeText(priorityColor).fontSize(11),
-                          ),
-                        ],
-                      ),
-                    ),
+                    Expanded(child: _buildLocationCard(wo)),
+                    const SizedBox(width: SentraSpacing.m),
+                    Expanded(child: _buildScheduleCard(wo)),
                   ],
                 ),
-                SizedBox(height: 20.0.h),
-                Text(
-                  wo.title,
-                  style: TextStyle(
-                    color: kTextPrimary,
-                    fontSize: 20.0.sp,
-                    fontWeight: FontWeight.w800,
-                    height: 1.3,
-                  ),
-                ),
-                SizedBox(height: 20.0.h),
-                Box(
-                  style: $sectionCard(),
+                const SizedBox(height: SentraSpacing.m),
+
+                // 3. Safety Card
+                _buildSafetyCard(wo),
+                const SizedBox(height: SentraSpacing.m),
+
+                // 4. Description
+                SentraCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionHeader(Icons.description_outlined, 'Description'),
-                      SizedBox(height: 12.0.h),
-                      Text(
-                        wo.description,
-                        style: TextStyle(
-                          color: kTextSecondary,
-                          fontSize: 14.0.sp,
-                          height: 1.5,
-                        ),
-                      ),
+                      _sectionTitle('Problem Description'),
+                      const SizedBox(height: SentraSpacing.s),
+                      Text(wo.description, style: SentraTypography.bodyMedium),
                     ],
                   ),
                 ),
-                SizedBox(height: 16.0.h),
-                Box(
-                  style: $sectionCard(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _sectionHeader(Icons.info_outline, 'Details'),
-                      SizedBox(height: 16.0.h),
-                      _detailRow('Work Order ID', wo.id),
-                      _detailRow('Created', formatDateTime(wo.createdAt)),
-                      _detailRow('Scheduled', formatDateTime(wo.scheduledDate)),
-                      _detailRow('Asset', wo.assetId ?? 'Unassigned'),
-                      _detailRow('Assigned To', wo.assignedTo ?? 'Unassigned'),
-                      _detailRow('Status', wo.status.name.toUpperCase()),
-                      _detailRow('Priority', wo.priority.name.toUpperCase()),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 16.0.h),
-                Box(
-                  style: $sectionCard(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _sectionHeader(Icons.timeline, 'Activity'),
-                      SizedBox(height: 16.0.h),
-                      _timelineItem('Created', formatDate(wo.createdAt), kInfo),
-                      if (wo.assignedTo != null)
-                        _timelineItem(
-                          'Assigned',
-                          formatDate(wo.createdAt),
-                          const Color(0xFF8B5CF6),
-                        ),
-                      _timelineItem(
-                        'Scheduled',
-                        formatDate(wo.scheduledDate),
-                        kWarning,
-                      ),
-                      if (wo.status == WorkOrderStatus.completed ||
-                          wo.status == WorkOrderStatus.verified)
-                        _timelineItem(
-                          'Completed',
-                          formatDate(DateTime.now()),
-                          kSuccess,
-                        ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 16.0.h),
-                Box(
-                  style: $sectionCard(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _sectionHeader(Icons.attach_file, 'Attachments'),
-                          IconButton(
-                            icon: const Icon(Icons.add_a_photo, color: kBrand),
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                builder: (_) => Padding(
-                                  padding: EdgeInsets.all(16.0.w),
-                                  child: AttachmentPicker(
-                                    entityId: wo.id,
-                                    entityType: 'work_order',
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16.0.h),
-                      ref
-                          .watch(attachmentsProvider(wo.id))
-                          .when(
-                            data: (attachments) =>
-                                AttachmentGallery(attachments: attachments),
-                            loading: () => const CircularProgressIndicator(),
-                            error: (err, stackTrace) =>
-                                const Text('Failed to load attachments'),
-                          ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 16.0.h),
-                // Comments section
+                const SizedBox(height: SentraSpacing.m),
+
+                // 5. Attachments
+                _buildAttachmentsSection(context, ref, wo),
+                const SizedBox(height: SentraSpacing.m),
+
+                // 6. Comments
                 WorkOrderCommentsSection(workOrderId: workOrderId),
-                SizedBox(height: 32.0.h),
+                const SizedBox(height: SentraSpacing.xxl),
               ],
             ),
           ),
+          bottomNavigationBar: _buildBottomActions(wo),
         );
       },
     );
   }
 
-  Widget _sectionHeader(IconData icon, String title) => Row(
-    children: [
-      Icon(icon, color: kAccent, size: 18.0.sp),
-      SizedBox(width: 8.0.w),
-      Text(
-        title,
-        style: TextStyle(
-          color: kTextPrimary,
-          fontSize: 14.0.sp,
-          fontWeight: FontWeight.w700,
-        ),
+  Widget _buildHeaderCard(WorkOrder wo) {
+    return SentraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(child: Text(wo.title, style: SentraTypography.h2)),
+              SentraBadge(
+                label: wo.status.name,
+                type: _getBadgeType(wo.status),
+              ),
+            ],
+          ),
+          const SizedBox(height: SentraSpacing.s),
+          Row(
+            children: [
+              const Icon(
+                LucideIcons.tag,
+                size: 14,
+                color: SentraColors.gray500,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                wo.workType?.name ?? 'General Work',
+                style: SentraTypography.bodySmall,
+              ),
+              const SizedBox(width: 16),
+              const Icon(
+                LucideIcons.alertCircle,
+                size: 14,
+                color: SentraColors.gray500,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Priority: ${wo.priority.name}',
+                style: SentraTypography.bodySmall,
+              ),
+            ],
+          ),
+        ],
       ),
-    ],
-  );
+    );
+  }
 
-  Widget _detailRow(String label, String value) => Padding(
-    padding: EdgeInsets.only(bottom: 10.0.h),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        StyledText(label, style: $detailLabel()),
-        Flexible(child: StyledText(value, style: $detailValue())),
-      ],
-    ),
-  );
+  Widget _buildLocationCard(WorkOrder wo) {
+    return SentraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('Site Info'),
+          const SizedBox(height: SentraSpacing.s),
+          _infoItem(LucideIcons.mapPin, wo.siteLocation ?? 'No location'),
+          _infoItem(LucideIcons.building, wo.businessUnit ?? 'No unit'),
+        ],
+      ),
+    );
+  }
 
-  Widget _timelineItem(String event, String date, Color color) => Padding(
-    padding: EdgeInsets.only(bottom: 12.0.h),
-    child: Row(
-      children: [
-        Container(
-          width: 8.0.w,
-          height: 8.0.w,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        SizedBox(width: 12.0.w),
-        Expanded(
-          child: Text(
-            event,
-            style: TextStyle(
-              color: kTextPrimary,
-              fontSize: 13.0.sp,
-              fontWeight: FontWeight.w600,
+  Widget _buildScheduleCard(WorkOrder wo) {
+    return SentraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('Schedule'),
+          const SizedBox(height: SentraSpacing.s),
+          _infoItem(
+            LucideIcons.calendar,
+            wo.scheduledStart?.toString().split(' ')[0] ?? 'Not set',
+          ),
+          _infoItem(
+            LucideIcons.clock,
+            'SLA: ${wo.slaTarget?.toString().split(' ')[1].substring(0, 5) ?? 'N/A'}',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSafetyCard(WorkOrder wo) {
+    return SentraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('Safety Management'),
+          const SizedBox(height: SentraSpacing.s),
+          Wrap(
+            spacing: SentraSpacing.s,
+            runSpacing: SentraSpacing.s,
+            children: [
+              _safetyChip('Permit', wo.permitRequirement),
+              _safetyChip('Confined Space', wo.confinedSpaceEntry),
+              _safetyChip('Hot Work', wo.hotWorkRequired),
+              _safetyChip('LOTO', wo.lockoutTagoutRequired),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttachmentsSection(
+    BuildContext context,
+    WidgetRef ref,
+    WorkOrder wo,
+  ) {
+    return SentraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _sectionTitle('Attachments'),
+              IconButton(
+                icon: const Icon(
+                  LucideIcons.plus,
+                  color: SentraColors.primary500,
+                ),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (_) => Padding(
+                      padding: const EdgeInsets.all(SentraSpacing.m),
+                      child: AttachmentPicker(
+                        entityId: wo.id,
+                        entityType: 'work_order',
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          ref
+              .watch(attachmentsProvider(wo.id))
+              .when(
+                data: (attachments) =>
+                    AttachmentGallery(attachments: attachments),
+                loading: () => const LinearProgressIndicator(),
+                error: (_, __) => const Text('Failed to load attachments'),
+              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomActions(WorkOrder wo) {
+    return Container(
+      padding: const EdgeInsets.all(SentraSpacing.m),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: SentraColors.gray200)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: SentraButton(
+              label: 'Update Status',
+              onPressed: () {},
+              isPrimary: false,
             ),
           ),
+          const SizedBox(width: SentraSpacing.m),
+          Expanded(
+            child: SentraButton(label: 'Start Work', onPressed: () {}),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: SentraTypography.label.copyWith(color: SentraColors.gray500),
+    );
+  }
+
+  Widget _infoItem(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: SentraColors.gray500),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: SentraTypography.bodySmall,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _safetyChip(String label, bool active) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: active
+            ? SentraColors.error.withOpacity(0.1)
+            : SentraColors.gray100,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: active ? SentraColors.error : SentraColors.gray200,
         ),
-        Text(
-          date,
-          style: TextStyle(color: kTextMuted, fontSize: 11.0.sp),
+      ),
+      child: Text(
+        label,
+        style: SentraTypography.label.copyWith(
+          fontSize: 10,
+          color: active ? SentraColors.error : SentraColors.gray500,
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
+
+  SentraBadgeType _getBadgeType(WorkOrderStatus status) {
+    switch (status) {
+      case WorkOrderStatus.completed:
+      case WorkOrderStatus.verified:
+        return SentraBadgeType.success;
+      case WorkOrderStatus.inProgress:
+        return SentraBadgeType.info;
+      case WorkOrderStatus.onHold:
+        return SentraBadgeType.warning;
+      case WorkOrderStatus.cancelled:
+        return SentraBadgeType.error;
+      default:
+        return SentraBadgeType.neutral;
+    }
+  }
 }

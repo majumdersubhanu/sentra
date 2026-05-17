@@ -1,16 +1,97 @@
 import 'package:drift/drift.dart';
 
-/// Local SQLite table for work orders, mirrors Supabase `work_orders`.
+/// Local SQLite table for work orders, expanded for professional FSM.
 class WorkOrderEntries extends Table {
   TextColumn get id => text()();
   TextColumn get title => text()();
   TextColumn get description => text().withDefault(const Constant(''))();
   TextColumn get status => text().withDefault(const Constant('open'))();
   TextColumn get priority => text().withDefault(const Constant('medium'))();
-  DateTimeColumn get scheduledDate => dateTime().nullable()();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  // Header Info
+  TextColumn get parentWorkOrderId => text().nullable()();
+  TextColumn get serviceRequestId => text().nullable()();
+  TextColumn get workType =>
+      text().nullable()(); // Preventive, Corrective, Emergency, Inspection
+  TextColumn get maintenanceStrategy => text().nullable()();
+  TextColumn get riskClassification => text().nullable()();
+  TextColumn get workflowStage => text().nullable()();
+
+  DateTimeColumn get scheduledDate =>
+      dateTime().nullable()(); // Keep for compatibility
+  DateTimeColumn get scheduledStart => dateTime().nullable()();
+  DateTimeColumn get scheduledFinish => dateTime().nullable()();
+  DateTimeColumn get slaTarget => dateTime().nullable()();
+
+  RealColumn get estimatedLaborHours => real().nullable()();
+  TextColumn get siteRegion => text().nullable()();
+  TextColumn get siteLocation => text().nullable()();
+  TextColumn get gpsCoordinates => text().nullable()();
+  TextColumn get businessUnit => text().nullable()();
+  TextColumn get department => text().nullable()();
+  TextColumn get costCenter => text().nullable()();
+
+  // Safety Flags
+  BoolColumn get permitRequirement =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get confinedSpaceEntry =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get hotWorkRequired =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get lockoutTagoutRequired =>
+      boolean().withDefault(const Constant(false))();
+
+  TextColumn get environmentalSensitivity => text().nullable()();
+  TextColumn get regulatoryComplianceScope => text().nullable()();
+  TextColumn get escalationTier => text().nullable()();
+
+  // Request Origin
+  TextColumn get requestedBy => text().nullable()();
+  TextColumn get reportedThrough => text().nullable()();
+  TextColumn get customerImpact => text().nullable()();
+  TextColumn get impactSeverity => text().nullable()();
+
+  // Execution / Closure
+  DateTimeColumn get actualStart => dateTime().nullable()();
+  DateTimeColumn get actualFinish => dateTime().nullable()();
+  TextColumn get technicianNotes => text().nullable()();
+  TextColumn get customerSignaturePath => text().nullable()();
+
+  // Relations & Meta
   TextColumn get assetId => text().nullable()();
-  TextColumn get assignedTo => text().nullable()();
+  TextColumn get assignedTo => text().nullable()(); // User ID
+  TextColumn get organizationId => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Local SQLite table for assets, expanded for professional FSM.
+class AssetEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get category => text().nullable()(); // Pump, HVAC, etc.
+  TextColumn get manufacturer => text().nullable()();
+  TextColumn get modelNumber => text().withDefault(const Constant(''))();
+  TextColumn get serialNumber => text().withDefault(const Constant(''))();
+  DateTimeColumn get installationDate => dateTime().nullable()();
+  TextColumn get warrantyStatus => text().nullable()();
+  TextColumn get criticality => text().nullable()();
+  TextColumn get operationalStatus =>
+      text().withDefault(const Constant('operational'))();
+  RealColumn get runtimeSinceLastService => real().nullable()();
+  TextColumn get mtbfReference => text().nullable()();
+  DateTimeColumn get lastMaintenanceDate => dateTime().nullable()();
+  TextColumn get lastFailureIncident => text().nullable()();
+  TextColumn get connectedSystems => text().nullable()(); // SCADA, IoT
+  TextColumn get owner => text().nullable()();
+
+  TextColumn get qrCode => text().withDefault(const Constant(''))();
+  TextColumn get locationCoordinates =>
+      text().withDefault(const Constant(''))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get organizationId => text().nullable()();
   TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
 
@@ -18,19 +99,16 @@ class WorkOrderEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// Local SQLite table for assets, mirrors Supabase `assets`.
-class AssetEntries extends Table {
+/// Local SQLite table for work order materials/parts.
+class WorkOrderMaterialEntries extends Table {
   TextColumn get id => text()();
-  TextColumn get name => text()();
-  TextColumn get qrCode => text().withDefault(const Constant(''))();
-  TextColumn get modelNumber => text().withDefault(const Constant(''))();
-  TextColumn get serialNumber => text().withDefault(const Constant(''))();
-  TextColumn get locationCoordinates =>
-      text().withDefault(const Constant(''))();
-  TextColumn get status => text().withDefault(const Constant('operational'))();
-  DateTimeColumn get lastMaintenanceDate => dateTime().nullable()();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  TextColumn get organizationId => text().nullable()();
+  TextColumn get workOrderId => text().references(WorkOrderEntries, #id)();
+  TextColumn get partNumber => text()();
+  TextColumn get description => text()();
+  RealColumn get quantity => real().withDefault(const Constant(1.0))();
+  TextColumn get unitOfMeasure => text().withDefault(const Constant('EA'))();
+  RealColumn get unitCost => real().nullable()();
+  TextColumn get warehouseLocation => text().nullable()();
   TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
 
   @override
@@ -41,7 +119,7 @@ class AssetEntries extends Table {
 class InspectionEntries extends Table {
   TextColumn get id => text()();
   TextColumn get templateName => text().withDefault(const Constant(''))();
-  TextColumn get workOrderId => text().withDefault(const Constant(''))();
+  TextColumn get workOrderId => text().nullable()();
   TextColumn get inspectorName => text().withDefault(const Constant(''))();
   TextColumn get status => text().withDefault(const Constant('draft'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -83,7 +161,7 @@ class WorkOrderCommentEntries extends Table {
 /// Local SQLite table for file attachments.
 class AttachmentEntries extends Table {
   TextColumn get id => text()();
-  TextColumn get entityType => text()();
+  TextColumn get entityType => text()(); // 'work_order', 'inspection', 'asset'
   TextColumn get entityId => text()();
   TextColumn get filePath => text()();
   TextColumn get fileName => text()();

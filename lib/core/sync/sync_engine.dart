@@ -257,6 +257,8 @@ class SyncEngine {
         return 'work_order_comments';
       case 'attachment':
         return 'attachments';
+      case 'work_order_material':
+        return 'work_order_materials';
       default:
         return entityType;
     }
@@ -273,6 +275,13 @@ class SyncEngine {
         break;
       case 'asset':
         await _db.assetDao.markSynced(entityId);
+        break;
+      case 'work_order_material':
+        await (update(
+          _db.workOrderMaterialEntries,
+        )..where((t) => t.id.equals(entityId))).write(
+          const WorkOrderMaterialEntriesCompanion(syncStatus: Value('synced')),
+        );
         break;
     }
   }

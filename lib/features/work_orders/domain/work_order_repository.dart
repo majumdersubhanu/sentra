@@ -7,4 +7,10 @@ abstract interface class WorkOrderRepository {
   Future<Either<Failure, WorkOrder>> getWorkOrderById(String id);
   Future<Either<Failure, Unit>> createWorkOrder(WorkOrder workOrder);
   Future<Either<Failure, Unit>> updateWorkOrder(WorkOrder workOrder);
+
+  // New FSM features
+  Future<Either<Failure, List<WorkOrder>>> searchWorkOrders(String query);
+  Future<Either<Failure, List<WorkOrderMaterial>>> getWorkOrderMaterials(
+    String workOrderId,
+  );
 }

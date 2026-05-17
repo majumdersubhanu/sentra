@@ -7,6 +7,12 @@ abstract interface class AuthRepository {
     String email,
     String password,
   );
+  Future<Either<Failure, Unit>> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+    String? organizationName,
+  });
   Future<Either<Failure, Unit>> signOut();
   Stream<bool> get authStateChanges;
   bool get isAuthenticated;

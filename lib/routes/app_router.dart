@@ -33,6 +33,7 @@ class AppRouter extends RootStackRouter {
       guards: [AuthGuard()],
       children: [
         AutoRoute(page: WorkOrdersRoute.page, initial: true),
+        AutoRoute(page: WorkOrdersCalendarRoute.page),
         AutoRoute(page: InspectionsRoute.page),
         AutoRoute(page: AssetsRoute.page),
         AutoRoute(page: UploadsRoute.page),
@@ -95,10 +96,6 @@ class AppRouter extends RootStackRouter {
       guards: [AuthGuard()],
     ),
     // Users routes
-    AutoRoute(
-      page: UsersRoute.page,
-      path: '/users',
-      guards: [AuthGuard()],
-    ),
+    AutoRoute(page: UsersRoute.page, path: '/users', guards: [AuthGuard()]),
   ];
 }
